@@ -115,6 +115,15 @@ for (const [naNetlify, aqui] of Object.entries(QUERO)) {
   if (typeof v === 'string' && v.trim() && !encontrados[aqui]) encontrados[aqui] = v.trim();
 }
 
+// Com --todas, traz também o resto das variáveis do site. Serve para recriar a
+// configuração em outro site da Netlify sem precisar olhar valor nenhum: o
+// player, por exemplo, depende de BUNNY_TOKEN_KEY, que não está na lista acima.
+if (process.argv.includes('--todas')) {
+  for (const [k, v] of Object.entries(dados)) {
+    if (typeof v === 'string' && v.trim() && !encontrados[k]) encontrados[k] = v.trim();
+  }
+}
+
 console.log(`\nno total, ${Object.keys(dados).length} variáveis. Das que preciso:`);
 for (const nome of Object.keys(QUERO)) {
   console.log(`   ${dados[nome] ? 'achei  ' : 'não tem'}  ${nome}`);
