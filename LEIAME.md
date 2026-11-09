@@ -120,6 +120,49 @@ Gateway (Mercado Pago, Stripe, ou um dos nacionais) + um webhook que escreve o s
 
 ---
 
+## Carregar o catálogo
+
+O catálogo não vive no site: ele mora no Supabase, e o vídeo na Bunny. Publicar
+o site não mexe no catálogo, e carregar o catálogo não exige publicar o site.
+
+As chaves ficam no `.env` (copie de `.env.exemplo`); o `.gitignore` já o ignora.
+
+```
+node scripts/preparar-capas.js      converte as capas do acervo para WebP
+node scripts/subir-capas.js         manda as capas para o Storage do Supabase
+node scripts/importar-catalogo.js   cria os títulos: nome, sinopse, capa, prateleiras
+node scripts/sincronizar-bunny.js   liga os vídeos prontos e publica os títulos
+```
+
+A ordem importa só na primeira vez. Depois, o único comando do dia a dia é o
+último: **termine um lote de envios na Bunny e rode `sincronizar-bunny.js`**.
+
+### Por que o título nasce despublicado
+
+`importar-catalogo.js` cria o título com `published = false`, ou seja, invisível
+no site. Um título sem vídeo é uma página com um botão "Assistir" que não leva a
+lugar nenhum — com 7 mil deles, a estreia seria uma vitrine de portas fechadas.
+O `sincronizar-bunny.js` publica cada título no instante em que o vídeo dele
+aparece pronto na Bunny. Assim o catálogo abre sozinho, conforme o envio anda.
+
+Os dois são seguros de repetir: é tudo por id, nada duplica, e quem já está
+publicado continua publicado.
+
+### As prateleiras
+
+Quem decide em que prateleira cada título entra é `scripts/categorias.js`, por
+palavra no nome e na sinopse. As marcações que vieram do catálogo antigo
+(`is_anime`, `is_bl_gl`, `is_new`…) **não** são usadas como categoria: elas não
+passam numa conferência — `is_recommended` está em 99,7% dos registros e
+`is_anime` marca dramas com atores de carne e osso.
+
+Para criar uma prateleira nova, acrescente um item naquele arquivo e confira o
+efeito antes de gravar qualquer coisa:
+
+```
+node scripts/medir-categorias.js
+```
+
 ## Observação sobre direitos
 
 Os banners desta estrutura trazem artes e sinopses de produções de terceiros (ReelShort e outras). Para o site no ar, use material que você tenha licença para exibir — além do risco jurídico, a Bunny derruba a conta mediante notificação de direitos autorais, e isso tira a plataforma inteira do ar.
