@@ -80,14 +80,15 @@ export function login() {
   return frame(`<div data-card>
     <span class="eyebrow">Bem-vindo de volta</span>
     <h1>Entrar no KingDrama</h1>
-    <p class="lead">Informe o e-mail da sua conta. Deixe a senha em branco para receber um código de acesso.</p>
+    <p class="lead">Entre com o e-mail e a senha da sua conta.</p>
     <div data-msg></div>
     <form data-email novalidate>
       <div class="field"><label for="email">E-mail</label>
         <input class="input" id="email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" required placeholder="voce@email.com"></div>
-      <div class="field"><label for="password">Senha <span style="color:var(--faint);font-weight:400">(opcional)</span></label>
-        <input class="input" id="password" name="password" type="password" autocomplete="current-password" placeholder="Deixe em branco para receber o código"></div>
-      <button class="btn btn-primary btn-block" type="submit">${icon.mail} Entrar</button>
+      <div class="field"><label for="password">Senha</label>
+        <input class="input" id="password" name="password" type="password" autocomplete="current-password" required placeholder="Sua senha">
+        <span class="hint"><a class="link" href="/recuperar">Esqueci minha senha</a></span></div>
+      <button class="btn btn-primary btn-block" type="submit">${icon.lock} Entrar</button>
     </form>
     <p class="foot">Ainda não tem conta? <a class="link" href="/cadastro">Criar conta</a></p>
   </div>`);
@@ -99,13 +100,16 @@ export function signup() {
   return frame(`<div data-card>
     <span class="eyebrow">Nova conta</span>
     <h1>Criar sua conta</h1>
-    <p class="lead">Leva menos de um minuto. Depois de confirmar o e-mail, você segue para o pagamento.</p>
+    <p class="lead">Leva menos de um minuto. Depois de criar a conta, você segue para o pagamento.</p>
     <div data-msg></div>
     <form data-email novalidate>
       <div class="field"><label for="name">Nome <span style="color:var(--faint);font-weight:400">(opcional)</span></label>
         <input class="input" id="name" name="name" autocomplete="name" maxlength="60" placeholder="Como quer ser chamado(a)"></div>
       <div class="field"><label for="email">E-mail</label>
         <input class="input" id="email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" required placeholder="voce@email.com"></div>
+      <div class="field"><label for="password">Senha</label>
+        <input class="input" id="password" name="password" type="password" autocomplete="new-password" required minlength="8" placeholder="Pelo menos 8 caracteres" aria-describedby="senha-dica">
+        <span class="hint" id="senha-dica">Use 8 caracteres ou mais. Evite uma senha que você já usa em outro site.</span></div>
       <label class="check"><input type="checkbox" name="terms" required> <span>Li e aceito os termos de uso e a política de privacidade.</span></label>
       <button class="btn btn-primary btn-block" type="submit">Criar conta</button>
     </form>
@@ -116,76 +120,129 @@ signup.mount = (root, ctx) => mountEmailForm(root, ctx, 'signup');
 
 function mountEmailForm(root, ctx, mode) {
   const card = root.querySelector('[data-card]');
-  const original = card.innerHTML;
   const bind = () => {
     const form = card.querySelector('[data-email]');
     const msg = card.querySelector('[data-msg]');
+    const erro = (txt) => { msg.innerHTML = `<div class="alert alert-error" role="alert">${esc(txt)}</div>`; };
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = form.elements.email.value.trim();
+      const senha = form.elements.password.value;
       const name = form.elements.namedItem('name')?.value.trim() || undefined;
-      if (!/^\S+@\S+\.\S{2,}$/.test(email)) { msg.innerHTML = '<div class="alert alert-error" role="alert">Informe um e-mail válido.</div>'; form.email.focus(); return; }
-      if (mode === 'signup' && !form.elements.terms.checked) { msg.innerHTML = '<div class="alert alert-error" role="alert">Aceite os termos para continuar.</div>'; return; }
+
+      if (!/^\S+@\S+\.\S{2,}$/.test(email)) { erro('Informe um e-mail válido.'); form.email.focus(); return; }
+      if (!senha) { erro('Digite sua senha.'); form.password.focus(); return; }
+      if (mode === 'signup' && senha.length < 8) { erro('A senha precisa ter pelo menos 8 caracteres.'); form.password.focus(); return; }
+      if (mode === 'signup' && !form.elements.terms.checked) { erro('Aceite os termos para continuar.'); return; }
+
       const btn = form.querySelector('button[type=submit]');
       const rotuloBtn = btn.innerHTML;
-      btn.disabled = true; btn.textContent = 'Enviando…';
-      const send = () => api('/api/auth/start', { method: 'POST', body: { email, name, mode, acceptTerms: mode === 'signup' ? true : undefined } });
-
-      // Senha preenchida: entra direto, sem a etapa do código.
-      const senha = form.elements.namedItem('password')?.value || '';
-      if (mode === 'login' && senha) {
-        btn.textContent = 'Entrando…';
-        try {
-          await api('/api/auth/login', { method: 'POST', body: { email, password: senha } });
-          await ctx.refreshMe();
-          ctx.navigate(afterLoginPath(), { replace: true });
-          return;
-        } catch (err) {
-          msg.innerHTML = `<div class="alert alert-error" role="alert">${esc(err.message)}</div>`;
-          btn.disabled = false; btn.innerHTML = rotuloBtn;
-          form.elements.password.select();
-          return;
-        }
-      }
+      btn.disabled = true;
+      btn.textContent = mode === 'signup' ? 'Criando conta…' : 'Entrando…';
+      msg.innerHTML = '';
 
       try {
-        await send();
-        card.innerHTML = codeStep(email);
-        mountCodeStep(card, { email, resend: send, ctx, onChange: () => { card.innerHTML = original; bind(); } });
+        if (mode === 'signup') {
+          const r = await api('/api/auth/signup', { method: 'POST', body: { email, password: senha, name, acceptTerms: true } });
+          if (r.needsEmailConfirm) {
+            card.innerHTML = `<span class="eyebrow">Quase lá</span>
+              <h1>Confirme seu e-mail</h1>
+              <p class="lead">Enviamos um link para <span class="email-pill">${esc(email)}</span>. Abra o link e depois volte para entrar.</p>
+              <a class="btn btn-primary btn-block" href="/entrar">Já confirmei — entrar</a>`;
+            return;
+          }
+        } else {
+          await api('/api/auth/login', { method: 'POST', body: { email, password: senha } });
+        }
+        await ctx.refreshMe();
+        ctx.navigate(afterLoginPath(), { replace: true });
       } catch (err) {
-        msg.innerHTML = `<div class="alert alert-error" role="alert">${esc(err.message)}</div>`;
+        erro(err.message);
         btn.disabled = false; btn.innerHTML = rotuloBtn;
+        form.password.select();
       }
     });
   };
   bind();
 }
 
-// ------------------------------------------------------------ Link de acesso (confirmação explícita)
-export function magicLink(ctx) {
-  const token = ctx.query.get('t');
-  if (!token) return frame('<h1>Link incompleto</h1><p class="lead">Abra o link exatamente como veio no e-mail ou peça um novo acesso.</p><a class="btn btn-primary btn-block" href="/entrar">Entrar com e-mail</a>');
-  return frame(`<div data-card><span class="eyebrow">Link de acesso</span>
-    <h1>Confirmar entrada</h1>
-    <p class="lead">Toque no botão para entrar neste dispositivo. O link só funciona uma vez.</p>
+// ------------------------------------------------------------ Esqueci minha senha
+export function recover() {
+  return frame(`<div data-card>
+    <span class="eyebrow">Recuperar acesso</span>
+    <h1>Esqueceu a senha?</h1>
+    <p class="lead">Informe o e-mail da sua conta. Enviamos um link para você criar uma nova.</p>
     <div data-msg></div>
-    <button class="btn btn-primary btn-block" type="button" data-go>Entrar no KingDrama</button></div>`);
+    <form data-form novalidate>
+      <div class="field"><label for="email">E-mail</label>
+        <input class="input" id="email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" required placeholder="voce@email.com"></div>
+      <button class="btn btn-primary btn-block" type="submit">${icon.mail} Enviar link</button>
+    </form>
+    <p class="foot">Lembrou? <a class="link" href="/entrar">Voltar para entrar</a></p>
+  </div>`);
 }
-magicLink.mount = (root, ctx) => {
-  const btn = root.querySelector('[data-go]');
-  if (!btn) return;
-  const token = ctx.query.get('t');
-  // Remove o token da barra de endereço (não fica no histórico nem em capturas de tela).
-  history.replaceState(history.state, '', '/entrar/link?t=' + '•'.repeat(6));
-  btn.addEventListener('click', async () => {
-    btn.disabled = true; btn.textContent = 'Entrando…';
+recover.mount = (root) => {
+  const card = root.querySelector('[data-card]');
+  const form = card.querySelector('[data-form]');
+  const msg = card.querySelector('[data-msg]');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = form.elements.email.value.trim();
+    if (!/^\S+@\S+\.\S{2,}$/.test(email)) {
+      msg.innerHTML = '<div class="alert alert-error" role="alert">Informe um e-mail válido.</div>';
+      return;
+    }
+    const btn = form.querySelector('button[type=submit]');
+    btn.disabled = true; btn.textContent = 'Enviando…';
+    const r = await api('/api/auth/recover', { method: 'POST', body: { email } }).catch(() => ({}));
+    // Mensagem igual existindo a conta ou não: não revela quem é cliente.
+    card.innerHTML = `<span class="eyebrow">Verifique seu e-mail</span>
+      <h1>Link enviado</h1>
+      <p class="lead">${esc(r.message || 'Se houver uma conta com este e-mail, enviamos o link para criar uma nova senha.')}</p>
+      <p class="lead">Não chegou em alguns minutos? Confira a caixa de spam ou promoções.</p>
+      <a class="btn btn-ghost btn-block" href="/entrar">Voltar para entrar</a>`;
+  });
+};
+
+// ------------------------------------------------------------ Definir nova senha
+// O link do e-mail traz a sessão de recuperação no endereço; o SDK do Supabase
+// a reconhece sozinho (detectSessionInUrl), então aqui só pedimos a senha nova.
+export function newPassword() {
+  return frame(`<div data-card>
+    <span class="eyebrow">Recuperar acesso</span>
+    <h1>Criar nova senha</h1>
+    <p class="lead">Escolha uma senha que você não use em outro site.</p>
+    <div data-msg></div>
+    <form data-form novalidate>
+      <div class="field"><label for="password">Nova senha</label>
+        <input class="input" id="password" name="password" type="password" autocomplete="new-password" required minlength="8" placeholder="Pelo menos 8 caracteres"></div>
+      <button class="btn btn-primary btn-block" type="submit">${icon.lock} Salvar e entrar</button>
+    </form>
+  </div>`);
+}
+newPassword.mount = (root, ctx) => {
+  const card = root.querySelector('[data-card]');
+  const form = card.querySelector('[data-form]');
+  const msg = card.querySelector('[data-msg]');
+  // Tira os tokens da barra de endereço: não ficam no histórico nem em prints.
+  if (location.hash) history.replaceState(history.state, '', '/nova-senha');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const senha = form.elements.password.value;
+    if (senha.length < 8) {
+      msg.innerHTML = '<div class="alert alert-error" role="alert">A senha precisa ter pelo menos 8 caracteres.</div>';
+      return;
+    }
+    const btn = form.querySelector('button[type=submit]');
+    btn.disabled = true; btn.textContent = 'Salvando…';
     try {
-      await api('/api/auth/link', { method: 'POST', body: { token } });
+      await api('/api/auth/password', { method: 'POST', body: { password: senha } });
       await ctx.refreshMe();
-      ctx.navigate(afterLoginPath(), { replace: true });
-    } catch (e) {
-      root.querySelector('[data-msg]').innerHTML = `<div class="alert alert-error" role="alert">${esc(e.message)}</div>`;
-      btn.outerHTML = '<a class="btn btn-primary btn-block" href="/entrar">Pedir novo acesso</a>';
+      ctx.navigate('/', { replace: true });
+    } catch (err) {
+      msg.innerHTML = `<div class="alert alert-error" role="alert">${esc(err.message)} Peça um novo link em <a class="link" href="/recuperar">Esqueci minha senha</a>.</div>`;
+      btn.disabled = false; btn.textContent = 'Salvar e entrar';
     }
   });
 };

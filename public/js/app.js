@@ -21,7 +21,8 @@ const routes = [
   { re: /^\/perfil$/, guard: 'user', page: pages.profile, tab: 'perfil' },
   { re: /^\/entrar$/, guard: 'guest', page: authPages.login, bare: true },
   { re: /^\/cadastro$/, guard: 'guest', page: authPages.signup, bare: true },
-  { re: /^\/entrar\/link$/, guard: 'public', page: authPages.magicLink, bare: true },
+  { re: /^\/recuperar$/, guard: 'guest', page: authPages.recover, bare: true },
+  { re: /^\/nova-senha$/, guard: 'public', page: authPages.newPassword, bare: true },
   { re: /^\/acesso$/, guard: 'user', page: authPages.pending, bare: true },
   { re: /^\/pagamento\/retorno$/, guard: 'user', page: authPages.checkoutReturn, bare: true },
 ];
