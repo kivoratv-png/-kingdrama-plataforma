@@ -24,6 +24,21 @@
   const K_FAV = 'kd_favs';
   const K_PENDING = 'kd_pending';
 
+  // ---------------------------------------------------------------- Contas de teste
+  // Estes e-mails entram com o acesso JÁ LIBERADO, sem passar pela tela de pagamento.
+  // Serve para você percorrer as telas internas rapidamente.
+  //
+  // Não é um perfil de administrador: não existe painel nem permissão a mais.
+  // E não é segredo — este arquivo é público, qualquer pessoa que abrir o
+  // inspetor do navegador lê a lista. Enquanto o login for de demonstração isso
+  // não muda nada (qualquer e-mail já entra), mas APAGUE esta lista quando o
+  // Supabase entrar, senão vira uma porta aberta de verdade.
+  const ACESSO_DIRETO = [
+    'admin@kingdrama.com',
+    'teste@kingdrama.com',
+  ];
+  const temAcessoDireto = (email) => ACESSO_DIRETO.includes(String(email || '').trim().toLowerCase());
+
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* indisponível */ } },
@@ -64,7 +79,8 @@
   function me() {
     const u = store.get(K_USER, null);
     if (!u) return { user: null };
-    const access = u.active
+    const liberado = u.active || temAcessoDireto(u.email);
+    const access = liberado
       ? { status: 'active', active: true, planCode: null, periodEnd: null, updatedAt: u.createdAt }
       : { status: 'pending', active: false, planCode: null, periodEnd: null, updatedAt: u.createdAt };
     return { user: { id: 1, email: u.email, name: u.name, createdAt: u.createdAt }, access };
@@ -108,6 +124,7 @@
       const base = prev && prev.email === email
         ? prev
         : { email, name: pending.name || null, active: false, createdAt: new Date().toISOString() };
+      if (temAcessoDireto(email)) { base.active = true; base.name = base.name || 'Administrador'; }
       store.set(K_USER, base);
       store.del(K_PENDING);
       return json(200, { ok: true });
