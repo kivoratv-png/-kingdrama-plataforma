@@ -1,0 +1,17 @@
+#!/bin/sh
+# Atualiza public/config/versao.json antes de cada commit.
+#
+# NÃO ESTÁ ATIVO. Para ativar, rode uma vez:
+#   git config core.hooksPath .githooks
+#
+# O site usa esse valor para perceber que saiu uma versão nova e se recarregar
+# em abas deixadas abertas. Se o arquivo ficar para trás, quem está com o site
+# aberto continua preso na versão antiga — que é exatamente o problema que ele
+# resolve. Sem o hook, é preciso rodar à mão antes de publicar:
+#   node scripts/gera-versao.js
+#
+# A versão é o resumo do conteúdo de public/js, public/css e index.html, então
+# commits que não mexem no site não geram ruído.
+node scripts/gera-versao.js || exit 0
+git add public/config/versao.json 2>/dev/null
+exit 0

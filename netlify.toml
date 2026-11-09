@@ -11,10 +11,13 @@
 [build]
   publish = "public"
   functions = "netlify/functions"
-  # O site continua sem etapa de build de verdade. Este comando só grava um
-  # arquivo com a identidade da publicação, que o site usa para perceber que
-  # saiu versão nova e se recarregar em abas deixadas abertas.
-  command = "node scripts/gera-versao.js"
+  # Vazio de propósito, e precisa continuar vazio. Preencher aqui faz a
+  # publicação virar um build de verdade, e a conta Free não tem crédito para
+  # isso: o deploy falha com "Skipped due to account credit usage exceeded"
+  # (aconteceu ao tentar gerar o versao.json por aqui). Sem command, publicar
+  # é só o envio dos arquivos e não consome crédito nenhum.
+  # O config/versao.json é gerado antes do commit, por scripts/gera-versao.js.
+  command = ""
 
 [build.environment]
   NODE_VERSION = "22"
