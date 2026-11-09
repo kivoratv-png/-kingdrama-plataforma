@@ -1,137 +1,173 @@
 -- ============================================================================
--- KingDrama — categorias por gênero + sinopses dos 25 títulos
+-- KingDrama — categorias + sinopses dos 25 títulos
 --
 -- Rode inteiro no SQL Editor do Supabase, DEPOIS do 01-schema.sql e do
--- 02-titulos.sql. Pode rodar mais de uma vez sem estragar nada (tudo usa
--- "on conflict do update") e não apaga nenhum dado existente.
+-- 02-titulos.sql. Pode rodar mais de uma vez: tudo é "on conflict do update"
+-- e nenhum título, favorito ou progresso é tocado.
 --
--- O QUE MUDA
--- 1. Os gêneros passam a existir como categorias. A home monta uma fileira por
---    categoria, na ordem do campo "position" — então a ordem daqui é a ordem em
---    que as fileiras aparecem na tela inicial.
--- 2. "Dublado" e "Legendado" continuam existindo, mas vão para o fim da lista
---    (position 90 e 91). São informação útil para o assinante e aparecem como
---    etiqueta na página do título; só deixam de ser as duas únicas gavetas do
---    catálogo.
--- 3. Cada título recebe de 1 a 3 gêneros e uma sinopse.
+-- COMO AS CATEGORIAS FICARAM
+-- Primeiro as 11 prateleiras da lista do dono (positions 1 a 10), na ordem em
+-- que ele as mandou. Depois, prateleiras específicas tiradas dos próprios
+-- títulos (positions 20 a 29), porque as 11 da lista cobriam só 10 dos 25
+-- títulos — os outros 15 (herdeiras, CEOs, máfia, vingança, casamento) não
+-- tinham onde aparecer. Por último, o idioma (positions 90 e 91).
+--
+-- A home monta UMA FILEIRA POR CATEGORIA, na ordem do campo "position". Então
+-- a ordem daqui é a ordem das fileiras na tela inicial. Categoria sem nenhum
+-- título não aparece em lugar nenhum: o próprio site filtra (count > 0). Por
+-- isso dá para criar "BL & GL", "Animes" e "Brasileiros" hoje sem custo — elas
+-- surgem sozinhas quando o primeiro título entrar.
 --
 -- IMPORTANTE SOBRE AS SINOPSES
 -- Foram escritas a partir do NOME de cada título, não do conteúdo do vídeo —
 -- eu não assisti aos episódios. São chamadas de vitrine, de propósito sem nome
 -- de personagem e sem contar o final, justamente para não afirmar o que não dá
--- para confirmar. Leia antes de divulgar e corrija o que não combinar com a
+-- para conferir. Leia antes de divulgar e corrija o que não combinar com a
 -- história de verdade: o texto está todo aqui, basta editar e rodar de novo.
 -- ============================================================================
 
 -- --------------------------------------------------------------- Categorias
 insert into public.categories (id, name, position) values
-  ('romance',      'Romance',                 1),
-  ('bilionario',   'Bilionários e CEOs',      2),
-  ('vinganca',     'Vingança e Reviravolta',  3),
-  ('mafia',        'Máfia',                   4),
-  ('realeza',      'Época e Realeza',         5),
-  ('proibido',     'Amor Proibido',           6),
-  ('familia',      'Família e Segredos',      7),
-  ('sobrenatural', 'Sobrenatural',            8),
-  ('dublado',      'Dublado',                90),
-  ('legendado',    'Legendado',              91)
+  -- As 11 da lista. "Início" ficou de fora porque é o menu, não uma gaveta.
+  ('novos-lancamentos',   'Novos Lançamentos',        1),
+  ('dublado',             'Séries Dubladas',          2),
+  ('bebes-e-gravidezes',  'Bebês e Gravidezes',       3),
+  ('relacionamento-tabu', 'Relacionamento Tabu',      4),
+  ('lobos-e-vampiros',    'Lobos & Vampiros',         5),
+  ('bl-e-gl',             'BL & GL',                  6),
+  ('brasileiros',         'Brasileiros',              7),
+  ('animes',              'Animes',                   8),
+  ('identidade-escondida','Identidade Escondida',     9),
+  ('recomendados',        'Recomendados Para Você',  10),
+
+  -- Específicas, tiradas dos títulos que já estão no ar.
+  ('herdeiras',           'Herdeiras & Heranças',    20),
+  ('bilionario',          'Bilionários & CEOs',      21),
+  ('mafia',               'Máfia & Submundo',        22),
+  ('vinganca',            'Vingança & Virada de Jogo', 23),
+  ('realeza',             'Realeza & Época',         24),
+  ('magia',               'Magia & Maldições',       25),
+  ('casamento-em-crise',  'Casamento em Crise',      26),
+  ('segredos-de-familia', 'Segredos de Família',     27),
+  ('amores-impossiveis',  'Amores Impossíveis',      28),
+  ('superacao',           'Histórias de Superação',  29),
+
+  -- Idioma: informação útil como etiqueta na página do título.
+  ('legendado',           'Séries Legendadas',       91)
 on conflict (id) do update set name = excluded.name, position = excluded.position;
 
--- --------------------------------------------------- Gênero de cada título
--- Deduzido do nome do título. Se algum estiver na gaveta errada, troque a
--- linha aqui e rode de novo (o insert não duplica).
-insert into public.title_categories (title_id, category_id) values
-  ('a-camponesa-e-o-lorde-dragao-1794178050',        'romance'),
-  ('a-camponesa-e-o-lorde-dragao-1794178050',        'sobrenatural'),
-  ('a-camponesa-e-o-lorde-dragao-1794178050',        'realeza'),
+-- "Dublado" virou "Séries Dubladas" reaproveitando o id antigo, então os 13
+-- títulos já marcados continuam valendo. "Legendado" seguiu o mesmo caminho.
 
+-- Duas prateleiras da lista nascem vazias de propósito:
+--   Novos Lançamentos    — os 25 títulos entraram todos no mesmo momento, então
+--                          nenhum é "novo" ainda. O certo é essa fileira ser
+--                          automática, por data de entrada; os títulos que você
+--                          está subindo agora serão os primeiros a aparecer.
+--   Recomendados Para Você — depende de quem está olhando (favoritos e
+--                          histórico), então é fileira calculada, não marcação.
+-- Enquanto estiverem vazias elas não aparecem na interface. Se quiser usá-las
+-- como vitrine manual enquanto isso, é só marcar títulos nelas abaixo.
+
+-- --------------------------------------------------- Categoria de cada título
+-- Cada título recebe de 1 a 4 prateleiras. Para mudar, edite a linha e rode de
+-- novo: o insert não duplica.
+insert into public.title_categories (title_id, category_id) values
+  ('a-camponesa-e-o-lorde-dragao-1794178050',        'realeza'),
+  ('a-camponesa-e-o-lorde-dragao-1794178050',        'magia'),
+  ('a-camponesa-e-o-lorde-dragao-1794178050',        'amores-impossiveis'),
+
+  ('a-coroa-que-ela-nasceu-pra-usar-1794183408',     'herdeiras'),
   ('a-coroa-que-ela-nasceu-pra-usar-1794183408',     'realeza'),
   ('a-coroa-que-ela-nasceu-pra-usar-1794183408',     'vinganca'),
-  ('a-coroa-que-ela-nasceu-pra-usar-1794183408',     'romance'),
 
-  ('a-doce-governanta-fugitiva-1794159042',          'romance'),
-  ('a-doce-governanta-fugitiva-1794159042',          'proibido'),
+  ('a-doce-governanta-fugitiva-1794159042',          'identidade-escondida'),
   ('a-doce-governanta-fugitiva-1794159042',          'realeza'),
+  ('a-doce-governanta-fugitiva-1794159042',          'amores-impossiveis'),
 
-  ('a-herdeira-rebelde-favorita-1794156584',         'romance'),
+  ('a-herdeira-rebelde-favorita-1794156584',         'herdeiras'),
   ('a-herdeira-rebelde-favorita-1794156584',         'bilionario'),
 
+  ('a-herdeira-recupera-a-sua-vida-1794159770',      'herdeiras'),
   ('a-herdeira-recupera-a-sua-vida-1794159770',      'vinganca'),
-  ('a-herdeira-recupera-a-sua-vida-1794159770',      'bilionario'),
-  ('a-herdeira-recupera-a-sua-vida-1794159770',      'familia'),
+  ('a-herdeira-recupera-a-sua-vida-1794159770',      'superacao'),
 
-  ('a-herdeira-italo--o-noivo-que-me-substimou-1794178743', 'romance'),
+  ('a-herdeira-italo--o-noivo-que-me-substimou-1794178743', 'herdeiras'),
+  ('a-herdeira-italo--o-noivo-que-me-substimou-1794178743', 'identidade-escondida'),
   ('a-herdeira-italo--o-noivo-que-me-substimou-1794178743', 'bilionario'),
   ('a-herdeira-italo--o-noivo-que-me-substimou-1794178743', 'vinganca'),
 
+  ('a-princesa-das-cinzas-1794185796',               'identidade-escondida'),
   ('a-princesa-das-cinzas-1794185796',               'realeza'),
   ('a-princesa-das-cinzas-1794185796',               'vinganca'),
-  ('a-princesa-das-cinzas-1794185796',               'romance'),
 
+  ('a-princesa-do-don-herdeira-de-um-imperio-1794184001', 'herdeiras'),
   ('a-princesa-do-don-herdeira-de-um-imperio-1794184001', 'mafia'),
-  ('a-princesa-do-don-herdeira-de-um-imperio-1794184001', 'romance'),
-  ('a-princesa-do-don-herdeira-de-um-imperio-1794184001', 'familia'),
 
+  ('a-vida-secreta-do-meu-marido-bilionario',        'identidade-escondida'),
   ('a-vida-secreta-do-meu-marido-bilionario',        'bilionario'),
-  ('a-vida-secreta-do-meu-marido-bilionario',        'romance'),
-  ('a-vida-secreta-do-meu-marido-bilionario',        'familia'),
+  ('a-vida-secreta-do-meu-marido-bilionario',        'casamento-em-crise'),
 
   ('abandonada-no-altar-escolhida-pelo-duque-1794183775', 'realeza'),
-  ('abandonada-no-altar-escolhida-pelo-duque-1794183775', 'romance'),
   ('abandonada-no-altar-escolhida-pelo-duque-1794183775', 'vinganca'),
 
+  ('bom-demais-pra-demitir-a-medica-genio-1794173619', 'superacao'),
   ('bom-demais-pra-demitir-a-medica-genio-1794173619', 'vinganca'),
-  ('bom-demais-pra-demitir-a-medica-genio-1794173619', 'romance'),
 
-  ('caindo-pelo-maior-inimigo-1794170427',           'romance'),
-  ('caindo-pelo-maior-inimigo-1794170427',           'proibido'),
+  ('caindo-pelo-maior-inimigo-1794170427',           'amores-impossiveis'),
+  ('caindo-pelo-maior-inimigo-1794170427',           'relacionamento-tabu'),
 
-  ('jiaojiao-meu-amor-1794160060',                   'romance'),
-  ('jiaojiao-meu-amor-1794160060',                   'familia'),
+  ('jiaojiao-meu-amor-1794160060',                   'amores-impossiveis'),
+  ('jiaojiao-meu-amor-1794160060',                   'segredos-de-familia'),
 
   ('jogo-na-ilha-a-obsessao-do-meu-ceo-1794154998',  'bilionario'),
-  ('jogo-na-ilha-a-obsessao-do-meu-ceo-1794154998',  'romance'),
-  ('jogo-na-ilha-a-obsessao-do-meu-ceo-1794154998',  'proibido'),
+  ('jogo-na-ilha-a-obsessao-do-meu-ceo-1794154998',  'relacionamento-tabu'),
 
-  ('meu-marido-nunca-me-escolheu-1794169335',        'romance'),
-  ('meu-marido-nunca-me-escolheu-1794169335',        'familia'),
-  ('meu-marido-nunca-me-escolheu-1794169335',        'vinganca'),
+  ('meu-marido-nunca-me-escolheu-1794169335',        'casamento-em-crise'),
+  ('meu-marido-nunca-me-escolheu-1794169335',        'segredos-de-familia'),
 
-  ('meu-pai-escolheu-outra-familia-1794173605',      'familia'),
+  ('meu-pai-escolheu-outra-familia-1794173605',      'segredos-de-familia'),
   ('meu-pai-escolheu-outra-familia-1794173605',      'vinganca'),
 
-  ('o-calor-da-sua-lingua-1794155444',               'romance'),
-  ('o-calor-da-sua-lingua-1794155444',               'proibido'),
+  ('o-calor-da-sua-lingua-1794155444',               'relacionamento-tabu'),
+  ('o-calor-da-sua-lingua-1794155444',               'amores-impossiveis'),
 
-  ('o-grande-e-poderoso-genio-1787460327',           'sobrenatural'),
-  ('o-grande-e-poderoso-genio-1787460327',           'romance'),
+  ('o-grande-e-poderoso-genio-1787460327',           'magia'),
 
   ('o-mafioso-e-a-noiva-hacker-1794178196',          'mafia'),
-  ('o-mafioso-e-a-noiva-hacker-1794178196',          'romance'),
-  ('o-mafioso-e-a-noiva-hacker-1794178196',          'proibido'),
+  ('o-mafioso-e-a-noiva-hacker-1794178196',          'amores-impossiveis'),
 
-  ('o-principe-vampiro-amaldicoado-1794184108',      'sobrenatural'),
-  ('o-principe-vampiro-amaldicoado-1794184108',      'romance'),
+  ('o-principe-vampiro-amaldicoado-1794184108',      'lobos-e-vampiros'),
+  ('o-principe-vampiro-amaldicoado-1794184108',      'magia'),
   ('o-principe-vampiro-amaldicoado-1794184108',      'realeza'),
 
   ('o-traidor-da-familia-1794170367',                'mafia'),
-  ('o-traidor-da-familia-1794170367',                'familia'),
-  ('o-traidor-da-familia-1794170367',                'vinganca'),
+  ('o-traidor-da-familia-1794170367',                'segredos-de-familia'),
 
+  ('posso-ler-a-mente-dos-bebes-da-mafia-1794178808', 'bebes-e-gravidezes'),
   ('posso-ler-a-mente-dos-bebes-da-mafia-1794178808', 'mafia'),
-  ('posso-ler-a-mente-dos-bebes-da-mafia-1794178808', 'sobrenatural'),
-  ('posso-ler-a-mente-dos-bebes-da-mafia-1794178808', 'familia'),
+  ('posso-ler-a-mente-dos-bebes-da-mafia-1794178808', 'magia'),
 
-  ('troca-de-casais-proibida-1794156381',            'proibido'),
-  ('troca-de-casais-proibida-1794156381',            'romance'),
+  ('troca-de-casais-proibida-1794156381',            'relacionamento-tabu'),
+  ('troca-de-casais-proibida-1794156381',            'casamento-em-crise'),
 
-  -- O nome não diz o gênero deste. Deixei só em Romance, que é a aposta mais
-  -- segura neste catálogo; corrija quando souber do que ele trata.
-  ('vagando-livre-pelo-mundo-1793984181',            'romance'),
+  -- O nome não entrega o gênero deste. "Histórias de Superação" foi onde
+  -- coube melhor; corrija quando souber do que ele trata.
+  ('vagando-livre-pelo-mundo-1793984181',            'superacao'),
 
-  ('virei-quarterback-minha-ex-capita-de-torcida-implora-pra-eu-voltar-1794173885', 'vinganca'),
-  ('virei-quarterback-minha-ex-capita-de-torcida-implora-pra-eu-voltar-1794173885', 'romance')
+  ('virei-quarterback-minha-ex-capita-de-torcida-implora-pra-eu-voltar-1794173885', 'superacao'),
+  ('virei-quarterback-minha-ex-capita-de-torcida-implora-pra-eu-voltar-1794173885', 'vinganca')
 on conflict do nothing;
+
+-- Limpeza: tira as gavetas da versão anterior deste arquivo que não existem
+-- mais nesta divisão. Se você nunca rodou aquela versão, estas linhas não
+-- fazem nada. Apagar a categoria apaga junto só o vínculo com os títulos
+-- (on delete cascade) — nenhum título é removido.
+--   romance      -> virou as prateleiras específicas
+--   proibido     -> virou "Relacionamento Tabu" (da sua lista)
+--   familia      -> virou "Segredos de Família"
+--   sobrenatural -> virou "Magia & Maldições" e "Lobos & Vampiros"
+delete from public.categories where id in ('romance', 'proibido', 'familia', 'sobrenatural');
 
 -- ------------------------------------------------------------------ Sinopses
 -- Escritas a partir do nome do título (leia o aviso no topo do arquivo).
@@ -242,19 +278,21 @@ update public.titles set name = replace(name, 'Substimou', 'Subestimou')
 -- update public.titles set name = 'A Herdeira Ítalo-Americana: O Noivo que Me Subestimou'
 --   where id = 'a-herdeira-italo--o-noivo-que-me-substimou-1794178743';
 
--- ----------------------------------------------------------------- Conferência
--- Esperado: 25 títulos, 25 com sinopse, 10 categorias, nenhum título sem gênero.
-select 'titulos'            as conferencia, count(*)::text from public.titles
-union all select 'com sinopse',  count(*)::text from public.titles where synopsis is not null and btrim(synopsis) <> ''
-union all select 'categorias',   count(*)::text from public.categories
-union all select 'sem genero',   count(*)::text from public.titles t
+-- ---------------------------------------------------------------- Conferência
+-- Esperado: 25 títulos, 25 com sinopse, 21 categorias, nenhum título sem
+-- prateleira de conteúdo (idioma não conta).
+select 'titulos'           as conferencia, count(*)::text from public.titles
+union all select 'com sinopse', count(*)::text from public.titles where synopsis is not null and btrim(synopsis) <> ''
+union all select 'categorias',  count(*)::text from public.categories
+union all select 'sem prateleira', count(*)::text from public.titles t
   where not exists (
     select 1 from public.title_categories tc
     join public.categories c on c.id = tc.category_id
     where tc.title_id = t.id and c.position < 90
   );
 
--- Quantos títulos em cada categoria (a home monta uma fileira por categoria).
+-- Quantos títulos em cada prateleira. As que aparecem com 0 ficam invisíveis
+-- no site até ganharem o primeiro título.
 select c.position, c.name, count(tc.title_id) as titulos
 from public.categories c
 left join public.title_categories tc on tc.category_id = c.id
