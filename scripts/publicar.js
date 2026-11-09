@@ -22,13 +22,29 @@
 'use strict';
 
 const { execFileSync } = require('node:child_process');
+const fs = require('node:fs');
 const path = require('node:path');
 
 const raiz = path.join(__dirname, '..');
-const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 
+// Chama o próprio arquivo de entrada do netlify-cli com o node, em vez do
+// comando "netlify". Isso evita dois problemas do Windows de uma vez: o Node
+// recusa executar um .cmd direto (spawnSync EINVAL), e passar pelo shell faz o
+// cmd.exe comer as aspas do JSON do --data.
+function achaNetlify() {
+  const candidatos = [
+    path.join(process.env.APPDATA || '', 'npm', 'node_modules', 'netlify-cli', 'bin', 'run.js'),
+    path.join(raiz, 'node_modules', 'netlify-cli', 'bin', 'run.js'),
+    '/usr/local/lib/node_modules/netlify-cli/bin/run.js',
+  ];
+  const achado = candidatos.find((c) => c && fs.existsSync(c));
+  if (!achado) throw new Error('não encontrei o netlify-cli (instale com: npm i -g netlify-cli)');
+  return achado;
+}
+
+const cli = achaNetlify();
 const rodar = (args, opcoes = {}) =>
-  execFileSync(npx, ['netlify', ...args], {
+  execFileSync(process.execPath, [cli, ...args], {
     cwd: raiz, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, ...opcoes,
   });
 
