@@ -54,9 +54,22 @@ fs.mkdirSync(DESTINO, { recursive: true });
 const catalogo = JSON.parse(fs.readFileSync(CATALOGO, 'utf8'));
 
 // Índice dos arquivos que existem, pelo nome sem extensão.
+// Duas pastas: o acervo antigo e a da Área de Trabalho onde você larga as capas
+// que faltavam (scripts/lista-sem-capa.js cria essa pasta e a planilha). O que
+// estiver na pasta nova tem preferência, para você poder trocar uma capa ruim
+// só largando a melhor lá.
 const existentes = new Map();
-for (const nome of fs.readdirSync(ORIGEM)) {
-  existentes.set(nome.replace(/\.(jpe?g|png|webp)$/i, ''), nome);
+const NOVAS = path.join(process.env.USERPROFILE || process.env.HOME || '', 'Desktop', 'KingDrama - capas novas');
+for (const pasta of [ORIGEM, NOVAS]) {
+  if (!fs.existsSync(pasta)) continue;
+  for (const nome of fs.readdirSync(pasta)) {
+    if (!/\.(jpe?g|png|webp)$/i.test(nome)) continue;
+    existentes.set(nome.replace(/\.(jpe?g|png|webp)$/i, ''), path.join(pasta, nome));
+  }
+}
+if (fs.existsSync(NOVAS)) {
+  const n = fs.readdirSync(NOVAS).filter((f) => /\.(jpe?g|png|webp)$/i.test(f)).length;
+  if (n) console.log(`capas novas na Área de Trabalho: ${n}`);
 }
 
 const { idDoTitulo } = require('./id-do-titulo');
@@ -72,9 +85,11 @@ for (const item of catalogo) {
   const slug = idDoTitulo(original, item.title);
   if (!slug) continue;
   const base = path.basename(item.cover_url || '').replace(/\.(jpe?g|png|webp)$/i, '');
-  const arquivo = existentes.get(base) || existentes.get(original) || existentes.get(slug);
+  // O id novo vem primeiro: é o nome que você usa ao largar uma capa na pasta
+  // da Área de Trabalho, e deve vencer a capa antiga do acervo.
+  const arquivo = existentes.get(slug) || existentes.get(base) || existentes.get(original);
   if (!arquivo) { semCapa.push(slug); continue; }
-  tarefas.push({ slug, origem: path.join(ORIGEM, arquivo) });
+  tarefas.push({ slug, origem: arquivo });
 }
 
 console.log('catálogo:', catalogo.length, '| com capa no disco:', tarefas.length, '| sem capa:', semCapa.length);
