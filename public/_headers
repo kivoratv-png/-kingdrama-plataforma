@@ -12,21 +12,29 @@
   Permissions-Policy: geolocation=(), microphone=(), camera=()
   Content-Security-Policy: default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self' blob:; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
 
-/banners/*
-  Cache-Control: public, max-age=3600
-
-/img/*
-  Cache-Control: public, max-age=2592000
+# Cache: os arquivos abaixo NÃO têm hash no nome (app.js é sempre app.js), então
+# cache longo faria o visitante continuar vendo a versão antiga depois de publicar.
+# Com must-revalidate o navegador pergunta "mudou?" a cada visita e recebe 304
+# quando não mudou — barato, e a atualização chega na hora.
+/js/*
+  Cache-Control: public, max-age=0, must-revalidate
 
 /css/*
-  Cache-Control: public, max-age=604800
+  Cache-Control: public, max-age=0, must-revalidate
 
-/js/*
-  Cache-Control: public, max-age=604800
-
-/vendor/*
-  Cache-Control: public, max-age=2592000, immutable
-
-# A configuração precisa valer assim que você publicar de novo.
 /config/*
   Cache-Control: public, max-age=0, must-revalidate
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Imagens: trocam pouco, mas ainda revalidam em 1 hora.
+/banners/*
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/img/*
+  Cache-Control: public, max-age=86400, must-revalidate
+
+# Biblioteca de terceiros, trocada só ao atualizar a versão.
+/vendor/*
+  Cache-Control: public, max-age=604800
