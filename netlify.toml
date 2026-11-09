@@ -10,6 +10,7 @@
 
 [build]
   publish = "public"
+  functions = "netlify/functions"
   command = ""
 
 [build.environment]

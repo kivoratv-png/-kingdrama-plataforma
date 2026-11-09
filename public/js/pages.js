@@ -333,9 +333,10 @@ export async function player(ctx) {
   player.data = data;
   const ep = data?.episode;
   const src = data?.sources?.[0];
+  const embed = data?.embedUrl;
   // Sem vídeo cadastrado: mostra a capa do título com o botão de play, sem aviso de indisponível
   let info = ep;
-  if (!src && !ep) {
+  if (!src && !embed && !ep) {
     try {
       const { title: t } = await api(`/api/titles/${encodeURIComponent(id)}`);
       info = { titleName: t.name, cover: t.cover, number: Number(n) || 1 };
@@ -351,9 +352,11 @@ export async function player(ctx) {
     </div>
     <div class="player-stage">
       <div class="player-frame">
-        ${src
-          ? `<video controls playsinline preload="metadata" poster="${esc(ep.cover)}"></video>`
-          : `<div class="player-poster"><img src="${esc(info.cover)}" alt=""><button class="play-big" type="button" aria-label="Reproduzir">${icon.play}</button></div>`}
+        ${embed
+          ? `<iframe src="${esc(embed)}" title="${esc(info.titleName)}" loading="eager" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`
+          : src
+            ? `<video controls playsinline preload="metadata" poster="${esc(ep.cover)}"></video>`
+            : `<div class="player-poster"><img src="${esc(info.cover)}" alt=""><button class="play-big" type="button" aria-label="Reproduzir">${icon.play}</button></div>`}
       </div>
     </div>
     ${ep ? `<div class="player-controls">

@@ -339,11 +339,21 @@
     }
 
     // ---- Reprodução do vídeo
-    // Aqui entra a chamada à função no servidor que assina a URL da Bunny.
-    // Enquanto ela não existe, devolvemos 404: a página do player mostra a capa
-    // do título com o botão, sem erro feio. NUNCA devolver o bunny_video_id
-    // direto daqui — o navegador é público.
-    if (p.startsWith('/api/play/')) return json(404, { error: 'Episódio ainda não disponível.' });
+    // Quem decide é a função no servidor (netlify/functions/play.js): ela confere
+    // a assinatura e devolve a URL já assinada. Aqui só repassamos o pedido com o
+    // token da sessão. O bunny_video_id nunca chega ao navegador.
+    if (metodo === 'GET' && (m = p.match(/^\/api\/play\/([\w-]+)\/(\d+)$/))) {
+      const { data } = await sb.auth.getSession();
+      const jwt = data?.session?.access_token;
+      if (!jwt) return json(401, { error: 'Entre na sua conta para assistir.', code: 'unauthenticated' });
+      const r = await fetchOriginal(
+        `/.netlify/functions/play?title=${encodeURIComponent(m[1])}&number=${encodeURIComponent(m[2])}`,
+        { headers: { Authorization: `Bearer ${jwt}` } }
+      );
+      const corpoResposta = await r.text();
+      return new Response(corpoResposta, { status: r.status, headers: { 'Content-Type': 'application/json' } });
+    }
+    if (p.startsWith('/api/play/')) return naoEncontrado();
 
     return naoEncontrado();
   }
