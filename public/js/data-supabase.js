@@ -93,7 +93,10 @@
 
   // ---------------------------------------------------------------- Banners
   let bannersPromise = null;
-  const carregaBanners = () => (bannersPromise ||= fetch('/config/banners.json', { cache: 'no-cache' })
+  // Sem 'no-cache' de propósito: o _headers já manda revalidar /config/* a
+  // cada visita, e forçar aqui faria o navegador ignorar o preload do
+  // index.html e buscar o arquivo uma segunda vez.
+  const carregaBanners = () => (bannersPromise ||= fetch('/config/banners.json')
     .then((r) => (r.ok ? r.json() : Promise.reject(new Error('config'))))
     .catch(() => ({ rotationSeconds: 8, recommendedSizes: {}, slots: [] })));
 

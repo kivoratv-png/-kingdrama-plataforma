@@ -14,7 +14,14 @@
   <meta property="og:description" content="Dramas e séries para assistir onde você estiver.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="/img/icon-512.png">
-  <link rel="preload" as="image" href="/banners/banner-1-mobile.webp" media="(max-width: 899px)">
+  <!-- Este index serve todas as rotas, então o que vier aqui é baixado também
+       por quem cai na tela de visitante. O preload do banner-1 (184 KB) ficava
+       de fora do que essa tela usa: era metade do peso da porta de entrada,
+       logo onde o visitante decide se fica. O banner segue priorizado onde de
+       fato aparece, pelo fetchpriority="high" do primeiro slide da home.
+       Já a configuração dos banners é lida em toda página, e sem este preload
+       ela só começava a ser buscada depois de todo o JS rodar. -->
+  <link rel="preload" as="fetch" href="/config/banners.json" crossorigin>
   <link rel="stylesheet" href="/css/app.css">
   <!-- Abre DNS + TLS com o Supabase já no começo do carregamento. Sem isto, a
        primeira consulta paga esse aperto de mão antes de sequer pedir os dados
