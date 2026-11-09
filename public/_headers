@@ -10,7 +10,7 @@
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=()
-  Content-Security-Policy: default-src 'self'; img-src 'self' data: blob: https://yvwdhuphzyjfhfsqdeho.supabase.co; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self' blob:; connect-src 'self' https://yvwdhuphzyjfhfsqdeho.supabase.co; frame-src https://iframe.mediadelivery.net; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; img-src 'self' data: blob: https://yvwdhuphzyjfhfsqdeho.supabase.co; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self' blob:; connect-src 'self' https://yvwdhuphzyjfhfsqdeho.supabase.co; frame-src https://player.mediadelivery.net; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
 
 # Cache: os arquivos abaixo NÃO têm hash no nome (app.js é sempre app.js), então
 # cache longo faria o visitante continuar vendo a versão antiga depois de publicar.

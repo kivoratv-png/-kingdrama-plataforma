@@ -118,8 +118,11 @@ exports.handler = async (event) => {
       .createHash('sha256')
       .update(BUNNY_TOKEN_KEY + fonte.bunny_video_id + expira)
       .digest('hex');
+    // ATENÇÃO ao domínio: player.mediadelivery.net exige o token (sem ele, 403).
+    // O antigo iframe.mediadelivery.net aceita qualquer coisa, inclusive nenhum
+    // token — usá-lo deixaria a proteção só na aparência. Verificado na prática.
     const embedUrl =
-      `https://iframe.mediadelivery.net/embed/${encodeURIComponent(biblioteca)}/` +
+      `https://player.mediadelivery.net/embed/${encodeURIComponent(biblioteca)}/` +
       `${encodeURIComponent(fonte.bunny_video_id)}?token=${token}&expires=${expira}` +
       `&autoplay=true&preload=true`;
 
