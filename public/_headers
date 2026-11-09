@@ -1,0 +1,32 @@
+# Cabeçalhos de segurança e de cache.
+#
+# connect-src e media-src já liberam https: porque é por aí que vão entrar
+# o Supabase (dados) e a Bunny Stream (vídeo). Se quiser travar mais, troque
+# https: pelos domínios exatos, por exemplo:
+#   connect-src 'self' https://SEU-PROJETO.supabase.co
+#   media-src   'self' blob: https://vz-XXXX.b-cdn.net
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: same-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+  Content-Security-Policy: default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self' blob:; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+
+/banners/*
+  Cache-Control: public, max-age=3600
+
+/img/*
+  Cache-Control: public, max-age=2592000
+
+/css/*
+  Cache-Control: public, max-age=604800
+
+/js/*
+  Cache-Control: public, max-age=604800
+
+/vendor/*
+  Cache-Control: public, max-age=2592000, immutable
+
+# A configuração precisa valer assim que você publicar de novo.
+/config/*
+  Cache-Control: public, max-age=0, must-revalidate

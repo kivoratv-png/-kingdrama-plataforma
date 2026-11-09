@@ -1,0 +1,186 @@
+{
+  "_comoUsar": "Banners da pagina inicial. Edite e publique de novo. Para trocar a imagem: coloque os arquivos em BANNERS/, preencha source e rode npm run banners. Um banner so aparece com active=true e as duas imagens preenchidas.",
+  "rotationSeconds": 8,
+  "recommendedSizes": {
+    "mobile": "1080 x 1440 px (3:4) - capa em pe da serie",
+    "desktop": "1920 x 640 px (3:1) - personagens a direita; a esquerda recebe o texto"
+  },
+  "slots": [
+    {
+      "id": "banner-1",
+      "active": true,
+      "titleId": "o-grande-e-poderoso-genio",
+      "source": {
+        "desktop": "banner grande e poderoso genio.jpg",
+        "mobile": "O grande e poderoso genio.jpg"
+      },
+      "tags": [
+        "Série",
+        "Legendado"
+      ],
+      "ctaLabel": "Reproduzir",
+      "image": {
+        "mobile": "/banners/banner-1-mobile.webp",
+        "desktop": "/banners/banner-1-desktop.webp"
+      },
+      "thumb": "/banners/banner-1-mobile.webp",
+      "headline": "O Grande e Poderoso Gênio",
+      "subtitle": "Elijah Baran é um gênio de uma lâmpada mágica capaz de realizar três desejos. Após milhares de anos, um bilionário usa seu último desejo para conceder liberdade a Elijah, mas com uma condição: Elijah deve se casar com sua neta, Christine, por cinco anos! Para cumprir o desejo, Elijah se transforma em humano, casa-se com Christine e, secretamente, a ajuda a se tornar uma CEO de sucesso. No entanto, Christine o ignora e o menospreza constantemente durante o casamento. Quando os cinco anos estão quase no fim, Elijah começa a perceber que Christine talvez nunca venha a amá-lo de verdade. Ele decide se divorciar dela.",
+      "alt": "O Grande e Poderoso Gênio"
+    },
+    {
+      "id": "banner-2",
+      "active": true,
+      "titleId": "peao-descartado-o-incomparavel-rei-dragao",
+      "source": {
+        "desktop": "banner peao descartado.jpg",
+        "mobile": "Peão Descartado o incomparável rei dragão.jpg"
+      },
+      "tags": [
+        "Série",
+        "Legendado"
+      ],
+      "ctaLabel": "Reproduzir",
+      "image": {
+        "mobile": "/banners/banner-2-mobile.webp",
+        "desktop": "/banners/banner-2-desktop.webp"
+      },
+      "thumb": "/banners/banner-2-mobile.webp",
+      "headline": "Peão Descartado, O Incomparável Rei Dragão",
+      "subtitle": "Owen: herdeiro descartado da família Hale e único discípulo do Mestre do Santuário dos Cavaleiros Dragões. Ele desperta as Dez Marcas do Deus Dragão e sela um vínculo de alma com Akira, portador da antiga linhagem do Dragão Dourado. Traído pela própria família, deserdado e atormentado pelo Santuário que deveria ser seu lar, o filho renegado se ergue com toda a fúria de um Deus Dragão quando a verdade enterrada finalmente ressurge e vinga cada humilhação que sofreu. Diante disso, o jovem senhor dos dragões parte mundo afora acompanhado por seu dragão. O continente inteiro estremece, e o próprio céu começa a mudar.",
+      "alt": "Peão Descartado, O Incomparável Rei Dragão"
+    },
+    {
+      "id": "banner-3",
+      "active": true,
+      "titleId": "o-doutor-que-marcou-meu-destino",
+      "source": {
+        "desktop": "Banner O doutor que marcou meu destino.jpg",
+        "mobile": "O doutor que marcou meu destino.jpg"
+      },
+      "tags": [
+        "Série",
+        "Legendado"
+      ],
+      "ctaLabel": "Reproduzir",
+      "image": {
+        "mobile": "/banners/banner-3-mobile.webp",
+        "desktop": "/banners/banner-3-desktop.webp"
+      },
+      "thumb": "/banners/banner-3-mobile.webp",
+      "headline": "O Doutor que Marcou Meu Destino",
+      "subtitle": "Quando a residente de medicina Malu tem uma noite com um estranho, ela pensa que é algo passageiro. Mas um mês depois, descobre duas verdades chocantes: está grávida do filho dele... e o estranho é seu novo chefe, Dr. Leonardo Medeiros. Assim que o segredo de Malu vem à tona, surgem seus rivais, incluindo sua família ciumenta e uma figura do passado de Graham, todos determinados a separá-los. Com a pressão aumentando de todos os lados, eles conseguirão sobreviver ao caos e encontrar o amor no processo?",
+      "alt": "O Doutor que Marcou Meu Destino"
+    },
+    {
+      "id": "banner-4",
+      "active": true,
+      "titleId": "voce-foi-substituido-primeiro-amor",
+      "source": {
+        "desktop": "Banner você foi substituido primeiro amor.jpg",
+        "mobile": "Você foi substituido primeiro amor.jpg"
+      },
+      "tags": [
+        "Série",
+        "Legendado"
+      ],
+      "ctaLabel": "Reproduzir",
+      "image": {
+        "mobile": "/banners/banner-4-mobile.webp",
+        "desktop": "/banners/banner-4-desktop.webp"
+      },
+      "thumb": "/banners/banner-4-mobile.webp",
+      "headline": "Você Foi Substituído, Primeiro Amor",
+      "subtitle": "Para o Jason, a Tessa era só uma pessoa descartável enquanto ele não tinha a garota que realmente queria. Depois que o sangue nos lençóis se tornou um troféu público e a dignidade de Tessa evaporou, a jovem finalmente parou de tentar consertar tudo. Seu primeiro amor acabou. Mas, à beira dos escombros, está a única pessoa que não deveria estar ali: outro menino que não tem a menor intenção de deixá-la ir sozinha.",
+      "alt": "Você Foi Substituído, Primeiro Amor"
+    },
+    {
+      "id": "banner-5",
+      "active": true,
+      "titleId": "como-chutar-um-craque-da-bola",
+      "source": {
+        "desktop": "Como chutrar um craque da bola.jpg",
+        "mobile": "Como chutar um craque da bola.jpg"
+      },
+      "tags": [
+        "Série",
+        "Legendado"
+      ],
+      "ctaLabel": "Reproduzir",
+      "image": {
+        "mobile": "/banners/banner-5-mobile.webp",
+        "desktop": "/banners/banner-5-desktop.webp"
+      },
+      "thumb": "/banners/banner-5-mobile.webp",
+      "headline": "Como Chutar um Craque da Bola",
+      "subtitle": "Raquel abre mão de sua vida de herdeira bilionária para ajudar o marido a se recuperar do estado vegetativo e a perseguir seu sonho de jogar na Liga Nacional de Hóquei. Mas, após sofrer um aborto devastador, ela se depara com uma verdade cruel: o homem por quem ela sacrificou tudo… pode ter escolhido outra.",
+      "alt": "Como Chutar um Craque da Bola"
+    },
+    {
+      "id": "banner-6",
+      "active": true,
+      "titleId": "seduzida-pelo-fazendeiro-pai-solteiro",
+      "source": {
+        "desktop": "banner seduzida pelo fazendeiro.jpg",
+        "mobile": "Seduzida pelo fazendeiro pai solteiro.jpg"
+      },
+      "tags": [
+        "Série",
+        "Legendado"
+      ],
+      "ctaLabel": "Reproduzir",
+      "image": {
+        "mobile": "/banners/banner-6-mobile.webp",
+        "desktop": "/banners/banner-6-desktop.webp"
+      },
+      "thumb": "/banners/banner-6-mobile.webp",
+      "headline": "Seduzida pelo Fazendeiro Pai Solteiro",
+      "subtitle": "A avó e a irmã manipuladoras de Natalie a casam com um fazendeiro rural, Rhett. Ele é pai solteiro, cuidando de sua filha muda, Ellie. A presença de Natalie não é bem-vinda, pois ela é rejeitada por Ellie e pela mulher da casa ao lado. Com o tempo, ela descobre que a mulher ao lado está abusando de Ellie. Ela cria um vínculo com Ellie, que se aprofunda quando Ellie fala pela primeira vez para salvá-la. Mas, à medida que Natalie começa a se adaptar, novos problemas surgem. Ellie sofre bullying na escola, e Natalie se vê envolvida em conflitos com suas famílias antiga e nova. Ela promete proteger o amor e a família que construiu com tanto esforço.",
+      "alt": "Seduzida pelo Fazendeiro Pai Solteiro"
+    },
+    {
+      "id": "banner-7",
+      "active": true,
+      "titleId": "votos-despedacados",
+      "source": {
+        "desktop": "banner votos despedaçados.jpg",
+        "mobile": "Votos despedaçados.jpg"
+      },
+      "tags": [
+        "Série",
+        "Legendado"
+      ],
+      "ctaLabel": "Reproduzir",
+      "image": {
+        "mobile": "/banners/banner-7-mobile.webp",
+        "desktop": "/banners/banner-7-desktop.webp"
+      },
+      "thumb": "/banners/banner-7-mobile.webp",
+      "headline": "Votos Despedaçados",
+      "subtitle": "A princesa Vanessa passou a vida em uma redoma de vidro — até o dia em que sua irmã é assassinada. Uma única noite basta para destruir toda a sua inocência. Como se não bastasse, ela se vê diante de uma traição devastadora: seu marido e seu melhor amigo ajudaram o assassino a escapar da justiça. A princesinha mimada precisa ficar para trás. Agora, Vanessa transformará a própria dor em vingança até que cada um dos culpados pague.",
+      "alt": "Votos Despedaçados"
+    },
+    {
+      "id": "banner-8",
+      "active": true,
+      "titleId": "meu-ex-o-irmao-dele-e-o-nosso-bebe",
+      "source": {
+        "desktop": "banner meu ex é o nosso bebe.jpg",
+        "mobile": "Meu ex, o irmão dele é o nosso bebe.jpg"
+      },
+      "tags": [
+        "Série",
+        "Legendado"
+      ],
+      "ctaLabel": "Reproduzir",
+      "image": {
+        "mobile": "/banners/banner-8-mobile.webp",
+        "desktop": "/banners/banner-8-desktop.webp"
+      },
+      "thumb": "/banners/banner-8-mobile.webp",
+      "headline": "Meu Ex, o Irmão Dele e o Nosso Bebê",
+      "subtitle": "Penélope Harris mudou de cidade em busca de um recomeço. Mas acabou engravidando de Knox Grant, o influente irmão mais velho de seu ex — um cowboy bruto, dono do rancho onde ela trabalha. Agora, Penélope está dividida entre um homem disposto a queimar tudo por amor e outro disposto a queimá-la viva por vingança.",
+      "alt": "Meu Ex, o Irmão Dele e o Nosso Bebê"
+    }
+  ]
+}

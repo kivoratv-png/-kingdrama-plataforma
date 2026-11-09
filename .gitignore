@@ -1,0 +1,7 @@
+node_modules/
+KingDrama-site.zip
+.env
+.env.local
+.DS_Store
+Thumbs.db
+.netlify/

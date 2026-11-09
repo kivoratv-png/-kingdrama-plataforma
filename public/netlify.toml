@@ -1,0 +1,23 @@
+# KingDrama — estrutura do site (estático, sem build e sem funções).
+#
+# Esta pasta é o site inteiro. Para publicar:
+#   - arrastando o zip em app.netlify.com  →  nada a configurar;
+#   - pelo GitHub  →  em Site configuration > Build & deploy,
+#     deixe "Base directory" = public e "Publish directory" = public.
+#
+# Quando a API entrar (assinatura das URLs da Bunny, webhook de pagamento),
+# crie a pasta netlify/functions e acrescente aqui:
+#   [build]
+#     functions = "netlify/functions"
+#   [[redirects]]
+#     from = "/api/*"
+#     to = "/.netlify/functions/api/:splat"
+#     status = 200
+#     force = true
+
+[build]
+  publish = "."
+  command = ""
+
+[build.environment]
+  NODE_VERSION = "22"
