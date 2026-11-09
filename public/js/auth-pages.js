@@ -80,12 +80,14 @@ export function login() {
   return frame(`<div data-card>
     <span class="eyebrow">Bem-vindo de volta</span>
     <h1>Entrar no KingDrama</h1>
-    <p class="lead">Informe o e-mail da sua conta. Você receberá um código e um link de acesso — sem senha.</p>
+    <p class="lead">Informe o e-mail da sua conta. Deixe a senha em branco para receber um código de acesso.</p>
     <div data-msg></div>
     <form data-email novalidate>
       <div class="field"><label for="email">E-mail</label>
         <input class="input" id="email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" required placeholder="voce@email.com"></div>
-      <button class="btn btn-primary btn-block" type="submit">${icon.mail} Enviar código</button>
+      <div class="field"><label for="password">Senha <span style="color:var(--faint);font-weight:400">(opcional)</span></label>
+        <input class="input" id="password" name="password" type="password" autocomplete="current-password" placeholder="Deixe em branco para receber o código"></div>
+      <button class="btn btn-primary btn-block" type="submit">${icon.mail} Entrar</button>
     </form>
     <p class="foot">Ainda não tem conta? <a class="link" href="/cadastro">Criar conta</a></p>
   </div>`);
@@ -125,15 +127,34 @@ function mountEmailForm(root, ctx, mode) {
       if (!/^\S+@\S+\.\S{2,}$/.test(email)) { msg.innerHTML = '<div class="alert alert-error" role="alert">Informe um e-mail válido.</div>'; form.email.focus(); return; }
       if (mode === 'signup' && !form.elements.terms.checked) { msg.innerHTML = '<div class="alert alert-error" role="alert">Aceite os termos para continuar.</div>'; return; }
       const btn = form.querySelector('button[type=submit]');
+      const rotuloBtn = btn.innerHTML;
       btn.disabled = true; btn.textContent = 'Enviando…';
       const send = () => api('/api/auth/start', { method: 'POST', body: { email, name, mode, acceptTerms: mode === 'signup' ? true : undefined } });
+
+      // Senha preenchida: entra direto, sem a etapa do código.
+      const senha = form.elements.namedItem('password')?.value || '';
+      if (mode === 'login' && senha) {
+        btn.textContent = 'Entrando…';
+        try {
+          await api('/api/auth/login', { method: 'POST', body: { email, password: senha } });
+          await ctx.refreshMe();
+          ctx.navigate(afterLoginPath(), { replace: true });
+          return;
+        } catch (err) {
+          msg.innerHTML = `<div class="alert alert-error" role="alert">${esc(err.message)}</div>`;
+          btn.disabled = false; btn.innerHTML = rotuloBtn;
+          form.elements.password.select();
+          return;
+        }
+      }
+
       try {
         await send();
         card.innerHTML = codeStep(email);
         mountCodeStep(card, { email, resend: send, ctx, onChange: () => { card.innerHTML = original; bind(); } });
       } catch (err) {
         msg.innerHTML = `<div class="alert alert-error" role="alert">${esc(err.message)}</div>`;
-        btn.disabled = false; btn.textContent = mode === 'signup' ? 'Criar conta' : 'Enviar código';
+        btn.disabled = false; btn.innerHTML = rotuloBtn;
       }
     });
   };

@@ -25,19 +25,41 @@
   const K_PENDING = 'kd_pending';
 
   // ---------------------------------------------------------------- Contas de teste
-  // Estes e-mails entram com o acesso JÁ LIBERADO, sem passar pela tela de pagamento.
-  // Serve para você percorrer as telas internas rapidamente.
+  // Entram com o acesso JÁ LIBERADO, sem passar pela tela de pagamento.
   //
-  // Não é um perfil de administrador: não existe painel nem permissão a mais.
-  // E não é segredo — este arquivo é público, qualquer pessoa que abrir o
-  // inspetor do navegador lê a lista. Enquanto o login for de demonstração isso
-  // não muda nada (qualquer e-mail já entra), mas APAGUE esta lista quando o
-  // Supabase entrar, senão vira uma porta aberta de verdade.
-  const ACESSO_DIRETO = [
-    'admin@kingdrama.com',
-    'teste@kingdrama.com',
+  //   senhaSha256 : entra com e-mail + senha, direto, sem código
+  //   codigo      : o código de 6 dígitos exigido desta conta (null = qualquer um serve)
+  //
+  // LEIA ANTES DE MUDAR: este arquivo é servido ao navegador. Qualquer visitante
+  // abre o inspetor e lê o que está aqui. O hash não protege nada de verdade —
+  // quem tem o hash testa senhas à vontade, offline. Por isso a senha abaixo é
+  // descartável, criada só para este site. NUNCA ponha aqui uma senha que você
+  // use em outro lugar (e-mail, banco, redes).
+  //
+  // Senha de verdade só com servidor: quando o Supabase entrar, ele guarda o hash
+  // no banco, confere no servidor dele e nada disso fica no código. Aí esta lista
+  // inteira deve ser apagada.
+  const CONTAS_TESTE = [
+    {
+      email: 'kivoratv@gmail.com',
+      nome: 'Administrador',
+      // senha: KingDrama@2026
+      senhaSha256: 'ac1fe1c8094050be5365bb6f6f9936dab88a0da385fa10d90b768034fc8761ed',
+      codigo: '142536',
+    },
+    { email: 'admin@kingdrama.com', nome: 'Administrador', senhaSha256: null, codigo: null },
+    { email: 'teste@kingdrama.com', nome: 'Teste', senhaSha256: null, codigo: null },
   ];
-  const temAcessoDireto = (email) => ACESSO_DIRETO.includes(String(email || '').trim().toLowerCase());
+
+  const normalizar = (e) => String(e || '').trim().toLowerCase();
+  const contaTeste = (email) => CONTAS_TESTE.find((c) => c.email === normalizar(email)) || null;
+  const temAcessoDireto = (email) => Boolean(contaTeste(email));
+
+  async function sha256(texto) {
+    const dados = new TextEncoder().encode(texto);
+    const buf = await crypto.subtle.digest('SHA-256', dados);
+    return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
 
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
@@ -116,15 +138,34 @@
       store.set(K_PENDING, { email, name: cleanName(body.name) });
       return json(200, { ok: true, message: 'Esta é a versão de estrutura: digite qualquer código de 6 dígitos para entrar.' });
     }
+    // Entrada com senha: só as contas de teste que têm senhaSha256.
+    if (method === 'POST' && p === '/api/auth/login') {
+      const email = normalizar(body.email);
+      const conta = contaTeste(email);
+      if (!conta || !conta.senhaSha256) {
+        return json(400, { error: 'Esta conta não usa senha. Deixe o campo em branco para entrar pelo código.', code: 'sem_senha' });
+      }
+      const digitada = String(body.password || '');
+      if (!digitada) return json(400, { error: 'Digite a senha.' });
+      if (await sha256(digitada) !== conta.senhaSha256) return json(401, { error: 'Senha incorreta.' });
+      store.set(K_USER, { email, name: conta.nome, active: true, createdAt: new Date().toISOString() });
+      store.del(K_PENDING);
+      return json(200, { ok: true });
+    }
+
     if (method === 'POST' && p === '/api/auth/verify') {
-      const email = String(body.email || '').trim().toLowerCase();
-      if (String(body.code || '').replace(/\D/g, '').length !== 6) return json(400, { error: 'Digite os 6 dígitos do código.' });
+      const email = normalizar(body.email);
+      const codigo = String(body.code || '').replace(/\D/g, '');
+      if (codigo.length !== 6) return json(400, { error: 'Digite os 6 dígitos do código.' });
+      const conta = contaTeste(email);
+      // Conta de teste com código fixo: só aquele código entra.
+      if (conta && conta.codigo && codigo !== conta.codigo) return json(400, { error: 'Código incorreto.' });
       const prev = store.get(K_USER, null);
       const pending = store.get(K_PENDING, {});
       const base = prev && prev.email === email
         ? prev
         : { email, name: pending.name || null, active: false, createdAt: new Date().toISOString() };
-      if (temAcessoDireto(email)) { base.active = true; base.name = base.name || 'Administrador'; }
+      if (conta) { base.active = true; base.name = base.name || conta.nome; }
       store.set(K_USER, base);
       store.del(K_PENDING);
       return json(200, { ok: true });
