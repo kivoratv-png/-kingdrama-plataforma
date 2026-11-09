@@ -5,3 +5,7 @@ KingDrama-site.zip
 .DS_Store
 Thumbs.db
 .netlify/
+
+# Skills da Netlify para assistentes de IA (instaladas pelo netlify init).
+# Uteis localmente, mas nao fazem parte do site.
+.claude/
