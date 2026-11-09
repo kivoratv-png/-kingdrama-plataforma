@@ -80,15 +80,23 @@
   // carregamento da página, e tudo era consultado duas vezes.
   //
   // O critério certo é a identidade: só limpa quando o dono da sessão muda.
+  // Não dá para confiar no NOME do evento para saber se a página está abrindo:
+  // ao restaurar uma sessão salva, o SDK emite SIGNED_IN *antes* de
+  // INITIAL_SESSION (verificado no site publicado). Quem esperasse o
+  // INITIAL_SESSION como primeiro aviso trataria aquele SIGNED_IN como login
+  // de outra pessoa e limparia o cache no meio do carregamento.
+  //
+  // O que vale é a ordem: a primeira notificação de uma aba é sempre a sessão
+  // dela sendo restaurada. A memória nasceu junto com a aba, não existe dado
+  // de outra conta para vazar. Dali em diante, o critério é a identidade.
   let donoDaSessao = null;
+  let primeiroAviso = true;
   sb.auth.onAuthStateChange((evento, sessao) => {
     const id = sessao?.user?.id || null;
-    if (evento === 'TOKEN_REFRESHED') return;
-    // Primeira notificação da página: só registra quem é. A memória acabou de
-    // nascer junto com a aba, não há o que vazar de outra conta.
-    if (evento === 'INITIAL_SESSION') { donoDaSessao = id; return; }
+    if (evento === 'TOKEN_REFRESHED') return; // mesma pessoa, token novo
+    if (primeiroAviso) { primeiroAviso = false; donoDaSessao = id; return; }
     if (evento === 'USER_UPDATED') { invalida('sessao'); return; }
-    if (id !== donoDaSessao) { donoDaSessao = id; invalida(); }
+    if (id !== donoDaSessao) { donoDaSessao = id; invalida(); } // trocou ou saiu
   });
 
   // ---------------------------------------------------------------- Banners
