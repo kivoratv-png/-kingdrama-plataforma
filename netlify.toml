@@ -1,0 +1,19 @@
+# Configuração usada quando o deploy vem do GitHub.
+#
+# A Netlify lê este arquivo na raiz do repositório e já sabe o que fazer:
+# não há etapa de build (o site é estático) e a pasta publicada é public/.
+# Com isso, ao conectar o repositório não é preciso preencher nada no painel.
+#
+# Existe um segundo netlify.toml dentro de public/ — aquele serve para quando o
+# site é enviado como zip (ali a pasta publicada é a própria raiz do zip).
+# A Netlify ignora o de dentro da pasta publicada, então os dois convivem.
+
+[build]
+  publish = "public"
+  command = ""
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# As rotas da SPA e os cabeçalhos de segurança continuam vindo de
+# public/_redirects e public/_headers, que valem nos dois modos de deploy.
