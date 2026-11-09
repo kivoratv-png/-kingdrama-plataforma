@@ -42,6 +42,12 @@ const NOMES_CORRIGIDOS = {
   'a-herdeira-italo--o-noivo-que-me-substimou-1794178743': 'A Herdeira Ítalo-Brasileira: O Noivo que Me Subestimou',
 };
 
+// Entradas que não são título de drama: nome de arquivo de vídeo que entrou no
+// acervo por engano. Duas no catálogo de hoje, e uma delas é um rip de cinema
+// ("Spider-man...telesync...mp4") — isso não é o acervo que a plataforma
+// licencia, e publicar um rip é um problema de outra natureza. Fica de fora.
+const LIXO = /(\.mp4|\.mkv|\.avi|1080p|720p|2160p|telesync|hdcam|camrip|web-?dl|bluray|br-?rip|hdrip|x264|h\.?264|h\.?265|hevc|ddp\d|-dks|yts|rarbg)/i;
+
 if (!fs.existsSync(caminho)) { console.error('não encontrei o catálogo em:', caminho); process.exit(1); }
 const bruto = JSON.parse(fs.readFileSync(caminho, 'utf8'));
 
@@ -49,9 +55,15 @@ const bruto = JSON.parse(fs.readFileSync(caminho, 'utf8'));
 // Ele quase sempre é o próprio slug — veja scripts/id-do-titulo.js para os
 // poucos casos em que o slug da origem não serve como endereço.
 const porSlug = new Map();
+const recusados = [];
 for (const item of bruto) {
+  if (LIXO.test(item.title || '') || LIXO.test(item.slug || '')) { recusados.push(item.title); continue; }
   const id = idDoTitulo(item.slug, item.title);
   if (id && !porSlug.has(id)) porSlug.set(id, { ...item, _id: id });
+}
+if (recusados.length) {
+  console.log(`recusados por não serem título de drama: ${recusados.length}`);
+  for (const r of recusados) console.log('   -', String(r).slice(0, 90));
 }
 let itens = [...porSlug.values()];
 if (limite) itens = itens.slice(0, limite);
