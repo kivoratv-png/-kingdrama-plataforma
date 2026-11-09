@@ -59,13 +59,20 @@ for (const nome of fs.readdirSync(ORIGEM)) {
   existentes.set(nome.replace(/\.(jpe?g|png|webp)$/i, ''), nome);
 }
 
+const { idDoTitulo } = require('./id-do-titulo');
+
 const tarefas = [];
 const semCapa = [];
 for (const item of catalogo) {
-  const slug = (item.slug || '').trim();
+  // O arquivo SAI com o mesmo id que o título terá no banco, senão a capa não
+  // encontra o título. Mas ele ENTRA pelo nome antigo: no acervo a capa está
+  // gravada ora pelo nome do cover_url, ora pelo slug original. Procurar pelo
+  // id novo deixaria 100 títulos sem capa (os que tiveram o slug consertado).
+  const original = String(item.slug || '').trim();
+  const slug = idDoTitulo(original, item.title);
   if (!slug) continue;
   const base = path.basename(item.cover_url || '').replace(/\.(jpe?g|png|webp)$/i, '');
-  const arquivo = existentes.get(base) || existentes.get(slug);
+  const arquivo = existentes.get(base) || existentes.get(original) || existentes.get(slug);
   if (!arquivo) { semCapa.push(slug); continue; }
   tarefas.push({ slug, origem: path.join(ORIGEM, arquivo) });
 }

@@ -26,6 +26,7 @@
 
 const { exige, opcional } = require('./env');
 const { semAcento } = require('./categorias');
+const { idDoTitulo } = require('./id-do-titulo');
 
 const args = process.argv.slice(2);
 const simular = args.includes('--simular');
@@ -75,11 +76,30 @@ async function listaDaBunny() {
     process.exit(1);
   }
 
-  const porSlug = new Map(titulos.map((t) => [chaveSlug(t.id), t]));
+  // Quatro formas de reconhecer de quem é o vídeo, da mais exata para a mais
+  // tolerante. O nome do arquivo na Bunny é o slug da origem, que nem sempre é
+  // igual ao id do título (uns eram longos ou estavam quebrados — veja
+  // id-do-titulo.js), por isso não basta comparar texto com texto.
+  const porId = new Map(titulos.map((t) => [t.id, t]));
+  const porIdLimpo = new Map(titulos.map((t) => [chaveSlug(t.id), t]));
+  const porNumero = new Map();   // o número do fim do slug identifica o item na origem
   const porNome = new Map();
   for (const t of titulos) {
+    const n = (t.id.match(/(\d{6,})$/) || [])[1];
+    if (n && !porNumero.has(n)) porNumero.set(n, t);
     const k = chaveNome(t.name);
     if (k && !porNome.has(k)) porNome.set(k, t);
+  }
+
+  function donoDoVideo(v) {
+    const arquivo = chaveSlug(v.title);
+    const numero = (arquivo.match(/(\d{6,})$/) || [])[1];
+    return porId.get(arquivo)
+      || porIdLimpo.get(arquivo)
+      || porId.get(idDoTitulo(arquivo, v.title))
+      || (numero ? porNumero.get(numero) : null)
+      || porNome.get(chaveNome(v.title))
+      || null;
   }
 
   // Um vídeo por título: o mais longo e, empatando, o mais recente.
@@ -87,7 +107,7 @@ async function listaDaBunny() {
   const descartados = [];
   const semDono = [];
   for (const v of prontos) {
-    const t = porSlug.get(chaveSlug(v.title)) || porNome.get(chaveNome(v.title));
+    const t = donoDoVideo(v);
     if (!t) { semDono.push(v); continue; }
     const atual = escolhido.get(t.id);
     const melhor = !atual

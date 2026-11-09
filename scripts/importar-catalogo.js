@@ -25,6 +25,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { classifica, idioma, todasAsCategorias } = require('./categorias');
+const { idDoTitulo } = require('./id-do-titulo');
 
 const args = process.argv.slice(2);
 const simular = args.includes('--simular');
@@ -44,11 +45,13 @@ const NOMES_CORRIGIDOS = {
 if (!fs.existsSync(caminho)) { console.error('não encontrei o catálogo em:', caminho); process.exit(1); }
 const bruto = JSON.parse(fs.readFileSync(caminho, 'utf8'));
 
-// Um registro por slug. O catálogo tem nomes repetidos; o slug é a chave real.
+// Um registro por id. O catálogo tem nomes repetidos; o id é a chave real.
+// Ele quase sempre é o próprio slug — veja scripts/id-do-titulo.js para os
+// poucos casos em que o slug da origem não serve como endereço.
 const porSlug = new Map();
 for (const item of bruto) {
-  const slug = String(item.slug || '').trim();
-  if (slug && !porSlug.has(slug)) porSlug.set(slug, item);
+  const id = idDoTitulo(item.slug, item.title);
+  if (id && !porSlug.has(id)) porSlug.set(id, { ...item, _id: id });
 }
 let itens = [...porSlug.values()];
 if (limite) itens = itens.slice(0, limite);
@@ -62,7 +65,7 @@ const titulos = [];
 const vinculos = [];
 const semAno = [];
 for (const item of itens) {
-  const slug = item.slug.trim();
+  const slug = item._id;
   const nome = NOMES_CORRIGIDOS[slug] || String(item.title || '').trim();
   const ano = Number(item.release_year) || null;
   if (!ano) semAno.push(slug);
