@@ -40,6 +40,44 @@
     return m || 'Não foi possível concluir. Tente de novo.';
   }
 
+  // ------------------------------------------------------- Cache de leitura
+  // Antes, cada clique no menu repetia as consultas de perfil e assinatura, e a
+  // página de título pedia o catálogo três vezes e os episódios duas na mesma
+  // renderização. Em 4G isso custava de 600ms a 1,1s por navegação.
+  //
+  // O cache guarda a PROMESSA, não só o valor pronto: duas chamadas à mesma
+  // consulta ao mesmo tempo compartilham uma única ida ao servidor (é isso que
+  // mata as repetições dentro de uma mesma tela).
+  //
+  // Isto é só velocidade, não permissão. Quem decide o que cada pessoa pode ler
+  // é o RLS do Postgres, em toda consulta: episódios exigem has_access() e
+  // episode_sources não é legível por ninguém além do servidor. Guardar a
+  // resposta no navegador não libera nada que o banco já não tivesse liberado.
+  const TTL = { sessao: 30000, catalogo: 120000, usuario: 20000 };
+  const cache = new Map();
+
+  function comCache(chave, ttl, produz) {
+    const guardado = cache.get(chave);
+    if (guardado && Date.now() - guardado.nascido < ttl) return guardado.promessa;
+    // Erro não fica guardado: a próxima tentativa vai ao servidor de novo.
+    const promessa = produz().catch((e) => { cache.delete(chave); throw e; });
+    cache.set(chave, { promessa, nascido: Date.now() });
+    return promessa;
+  }
+
+  // Sem prefixo, esquece tudo (troca de conta). Com prefixo, só aquele grupo.
+  function invalida(prefixo) {
+    if (!prefixo) return cache.clear();
+    for (const k of [...cache.keys()]) if (k.startsWith(prefixo)) cache.delete(k);
+  }
+
+  // Entrou, saiu ou trocou de conta: nada do usuário anterior pode sobrar em
+  // memória. TOKEN_REFRESHED é só a renovação do token do mesmo usuário, e aí
+  // limpar seria jogar fora cache bom a cada hora.
+  sb.auth.onAuthStateChange((evento) => {
+    if (evento !== 'TOKEN_REFRESHED') invalida();
+  });
+
   // ---------------------------------------------------------------- Banners
   let bannersPromise = null;
   const carregaBanners = () => (bannersPromise ||= fetch('/config/banners.json', { cache: 'no-cache' })
@@ -52,7 +90,10 @@
     return data?.session?.user || null;
   }
 
-  async function montaMe() {
+  // Perfil + assinatura: pedido por toda página protegida, muda muito pouco.
+  const montaMe = () => comCache('sessao', TTL.sessao, montaMeAgora);
+
+  async function montaMeAgora() {
     const user = await usuarioAtual();
     if (!user) return { user: null };
 
@@ -96,22 +137,32 @@
   // ---------------------------------------------------------------- Catálogo
   const paraCard = (t) => ({ id: t.id, name: t.name, cover: t.cover, episodes: t.episodes_count || 0 });
 
-  async function buscaTitulos({ categoria = null, busca = null, limite = 500 } = {}) {
+  // O catálogo inteiro cabe em uma consulta e serve a home, as categorias e os
+  // "parecidos" da página de título. Filtrar por categoria é trabalho local
+  // sobre a lista que já está em mãos — não precisa de outra ida ao banco.
+  function buscaTitulos({ categoria = null, busca = null, limite = 500 } = {}) {
+    // Busca por texto muda a cada letra digitada: essa não entra no cache.
+    if (busca) return consultaTitulos({ busca, limite });
+    return comCache(`catalogo:titulos:${limite}`, TTL.catalogo, () => consultaTitulos({ limite }))
+      .then((lista) => (categoria ? lista.filter((t) => t.categories.includes(categoria)) : lista));
+  }
+
+  async function consultaTitulos({ busca = null, limite = 500 } = {}) {
     let q = sb.from('titles').select('id, name, cover, synopsis, title_categories(category_id)')
       .eq('published', true).order('name');
     if (busca) q = q.ilike('name', `%${busca}%`);
     q = q.limit(limite);
     const { data, error } = await q;
     if (error) throw error;
-    let lista = (data || []).map((t) => ({
+    return (data || []).map((t) => ({
       ...t,
       categories: (t.title_categories || []).map((c) => c.category_id),
     }));
-    if (categoria) lista = lista.filter((t) => t.categories.includes(categoria));
-    return lista;
   }
 
-  async function listaCategorias() {
+  const listaCategorias = () => comCache('catalogo:categorias', TTL.catalogo, consultaCategorias);
+
+  async function consultaCategorias() {
     const [{ data: cats, error: e1 }, { data: vinculos, error: e2 }] = await Promise.all([
       sb.from('categories').select('id, name, position').order('position').order('name'),
       sb.from('title_categories').select('category_id, title_id'),
@@ -125,10 +176,48 @@
       .filter((c) => c.count > 0);
   }
 
-  async function idsFavoritos() {
+  const idsFavoritos = () => comCache('usuario:favoritos', TTL.usuario, async () => {
     const { data } = await sb.from('favorites').select('title_id').order('created_at', { ascending: false });
     return (data || []).map((f) => f.title_id);
-  }
+  });
+
+  // Lista de episódios de um título. O RLS continua exigindo assinatura ativa
+  // aqui: sem acesso, o Postgres devolve vazio, e vazio não fica em cache.
+  const episodiosDe = (id) => comCache(`catalogo:episodios:${id}`, TTL.catalogo, async () => {
+    const { data, error } = await sb.from('episodes')
+      .select('number, name, duration_s').eq('title_id', id).eq('published', true).order('number');
+    if (error) throw error;
+    const lista = data || [];
+    // Vazio aqui pode ser falta de acesso (o RLS filtra sem reclamar), não um
+    // título sem episódios. Não vale guardar: se o acesso for liberado agora,
+    // a próxima visita já encontra a lista certa.
+    if (!lista.length) invalida(`catalogo:episodios:${id}`);
+    return lista;
+  });
+
+  const historico = () => comCache('usuario:historico', TTL.usuario, async () => {
+    const { data } = await sb.from('watch_progress')
+      .select('position_s, updated_at, episodes(number, title_id, titles(id, name, cover))')
+      .order('updated_at', { ascending: false }).limit(30);
+    return (data || []).filter((r) => r.episodes?.titles).map((r) => ({
+      id: r.episodes.titles.id,
+      name: r.episodes.titles.name,
+      cover: r.episodes.titles.cover,
+      number: r.episodes.number,
+      position: r.position_s,
+      updatedAt: r.updated_at,
+    }));
+  });
+
+  const detalheTitulo = (id) => comCache(`catalogo:titulo:${id}`, TTL.catalogo, async () => {
+    const { data, error } = await sb.from('titles')
+      .select('id, name, cover, synopsis, title_categories(category_id, categories(id, name))')
+      .eq('id', id).eq('published', true).maybeSingle();
+    if (error) throw error;
+    // Não guarda "não existe": o título pode ser publicado logo depois.
+    if (!data) invalida(`catalogo:titulo:${id}`);
+    return data;
+  });
 
   // ---------------------------------------------------------------- Rotas
   async function trata(metodo, url, corpo) {
@@ -212,6 +301,7 @@
       const nome = limpaNome(corpo.name);
       const { error } = await sb.from('profiles').update({ name: nome }).eq('id', me.user.id);
       if (error) return json(400, { error: traduzErro(error) });
+      invalida('sessao'); // o nome mudou: a próxima leitura busca o novo
       return json(200, { ok: true });
     }
 
@@ -261,17 +351,13 @@
 
     if (metodo === 'GET' && (m = p.match(/^\/api\/titles\/([\w-]+)$/))) {
       const id = m[1];
-      const { data: t, error } = await sb.from('titles')
-        .select('id, name, cover, synopsis, title_categories(category_id, categories(id, name))')
-        .eq('id', id).eq('published', true).maybeSingle();
-      if (error) return json(400, { error: traduzErro(error) });
-      if (!t) return json(404, { error: 'Título não encontrado.' });
-
-      const [{ data: eps }, favs, relacionados] = await Promise.all([
-        sb.from('episodes').select('number, name, duration_s').eq('title_id', id).eq('published', true).order('number'),
-        idsFavoritos(),
-        buscaTitulos(),
+      // As quatro consultas não dependem uma da outra: vão juntas. Antes o
+      // título era esperado sozinho e só depois começavam as outras três —
+      // uma ida e volta inteira de atraso, por nada.
+      const [t, eps, favs, relacionados] = await Promise.all([
+        detalheTitulo(id), episodiosDe(id), idsFavoritos(), buscaTitulos(),
       ]);
+      if (!t) return json(404, { error: 'Título não encontrado.' });
 
       const categorias = (t.title_categories || []).map((c) => c.categories).filter(Boolean);
       const idsCats = categorias.map((c) => c.id);
@@ -300,31 +386,24 @@
 
     if ((m = p.match(/^\/api\/favorites\/([\w-]+)$/))) {
       const id = m[1];
+      // A lista de favoritos e o coração da página de título saem do cache:
+      // favoritar tem de aparecer na hora, não daqui a 20 segundos.
       if (metodo === 'PUT') {
         const { error } = await sb.from('favorites').upsert({ user_id: me.user.id, title_id: id });
         if (error) return json(400, { error: traduzErro(error) });
+        invalida('usuario:favoritos');
         return json(200, { ok: true, favorite: true });
       }
       if (metodo === 'DELETE') {
         const { error } = await sb.from('favorites').delete().eq('user_id', me.user.id).eq('title_id', id);
         if (error) return json(400, { error: traduzErro(error) });
+        invalida('usuario:favoritos');
         return json(200, { ok: true, favorite: false });
       }
     }
 
     if (metodo === 'GET' && p === '/api/history') {
-      const { data } = await sb.from('watch_progress')
-        .select('position_s, updated_at, episodes(number, title_id, titles(id, name, cover))')
-        .order('updated_at', { ascending: false }).limit(30);
-      const itens = (data || []).filter((r) => r.episodes?.titles).map((r) => ({
-        id: r.episodes.titles.id,
-        name: r.episodes.titles.name,
-        cover: r.episodes.titles.cover,
-        number: r.episodes.number,
-        position: r.position_s,
-        updatedAt: r.updated_at,
-      }));
-      return json(200, { items: itens });
+      return json(200, { items: await historico() });
     }
 
     if (metodo === 'POST' && p === '/api/play/progress') {
@@ -335,8 +414,10 @@
         user_id: me.user.id, episode_id: ep.id,
         position_s: Math.max(0, Math.floor(Number(position) || 0)), updated_at: new Date().toISOString(),
       });
+      invalida('usuario:historico'); // avançou no episódio: o histórico mudou
       return json(200, { ok: true });
     }
+
 
     // ---- Reprodução do vídeo
     // Quem decide é a função no servidor (netlify/functions/play.js): ela confere
@@ -371,6 +452,17 @@
       return json(500, { error: traduzErro(e) });
     }
   };
+
+  // Pré-aquecimento. Quem já tem sessão salva quase sempre cai na home, e a
+  // home precisa do catálogo. Disparando aqui, essa consulta corre junto com a
+  // verificação da sessão em vez de esperar por ela: some uma ida e volta
+  // inteira da abertura do site. Só para quem tem sessão — sem ela o RLS
+  // devolveria vazio, e vazio em cache seria pior que lento.
+  sb.auth.getSession().then(({ data }) => {
+    if (!data?.session) return;
+    buscaTitulos().catch(() => {});
+    listaCategorias().catch(() => {});
+  }).catch(() => {});
 
   window.__KD__ = { version: 'supabase-1.0', catalogReady: true };
 })();

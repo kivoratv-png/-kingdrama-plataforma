@@ -81,10 +81,20 @@ function heroBanners(slots) {
       const link = state.site?.catalogReady && s.titleId
         ? `/titulo/${encodeURIComponent(s.titleId)}`
         : `/em-breve?t=${encodeURIComponent(s.headline || '')}`;
+      // Só o primeiro slide nasce com src. "hidden" esconde, mas NÃO impede o
+      // download: os oito banners desciam juntos (mais de 1 MB) disputando a
+      // rede com as capas. Os outros entram em data-src e são buscados pelo
+      // carrossel pouco antes de aparecerem — com 8s de rotação, sobra tempo.
+      const fonte = i
+        ? `<source media="(min-width: 900px)" data-srcset="${esc(s.image.desktop)}">`
+        : `<source media="(min-width: 900px)" srcset="${esc(s.image.desktop)}">`;
+      const imagem = i
+        ? `<img data-src="${esc(s.image.mobile)}" alt="${esc(s.alt || s.headline || '')}">`
+        : `<img src="${esc(s.image.mobile)}" alt="${esc(s.alt || s.headline || '')}" fetchpriority="high">`;
       return `<article class="banner" data-slide="${i}" aria-roledescription="slide" aria-label="${i + 1} de ${slots.length}" ${i ? 'hidden' : ''}>
         <picture>
-          <source media="(min-width: 900px)" srcset="${esc(s.image.desktop)}">
-          <img src="${esc(s.image.mobile)}" alt="${esc(s.alt || s.headline || '')}" ${i ? '' : 'fetchpriority="high"'}>
+          ${fonte}
+          ${imagem}
         </picture>
         <div class="banner-text">
           ${s.headline ? `<h2>${esc(s.headline)}</h2>` : ''}
@@ -128,9 +138,25 @@ home.mount = (root) => {
     if (slides.length < 2) return;
     const track = hero.querySelector('.banner-thumbs-track');
     let cur = 0, timer;
+
+    // Busca a imagem de um slide que ainda não foi baixado. A ordem importa:
+    // o <source> do desktop precisa estar pronto antes do src do <img>, senão
+    // o navegador começa a baixar a versão mobile mesmo em tela grande.
+    const carregaSlide = (n) => {
+      const slide = slides[(n + slides.length) % slides.length];
+      const img = slide?.querySelector('img[data-src]');
+      if (!img) return;
+      const src = slide.querySelector('source[data-srcset]');
+      if (src) { src.srcset = src.dataset.srcset; delete src.dataset.srcset; }
+      img.src = img.dataset.src;
+      delete img.dataset.src;
+    };
+
     const show = (i) => {
       slides[cur].hidden = true;
       cur = (i + slides.length) % slides.length;
+      carregaSlide(cur);      // caso tenham pulado direto para cá pela miniatura
+      carregaSlide(cur + 1);  // e já deixa o próximo pronto
       slides[cur].hidden = false;
       hero.querySelectorAll('.banner-thumbs [data-i]').forEach((b) => b.setAttribute('aria-selected', String(Number(b.dataset.i) === cur)));
       hero.querySelectorAll('.banner-dots [data-i]').forEach((b) => b.setAttribute('aria-current', String(Number(b.dataset.i) === cur)));
@@ -155,6 +181,10 @@ home.mount = (root) => {
       x0 = null;
       if (Math.abs(dx) > 40) { show(cur + (dx < 0 ? 1 : -1)); restart(); }
     });
+    // O segundo banner só é buscado quando a página fica ociosa: a primeira
+    // troca já o encontra pronto, sem disputar rede com as capas na abertura.
+    const quandoOcioso = window.requestIdleCallback || ((fn) => setTimeout(fn, 1500));
+    quandoOcioso(() => carregaSlide(1));
     restart();
     return;
   }
