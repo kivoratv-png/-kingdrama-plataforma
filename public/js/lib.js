@@ -15,7 +15,13 @@ export async function api(path, { method = 'GET', body } = {}) {
   });
   let data = null;
   try { data = await res.json(); } catch { /* sem corpo */ }
-  if (!res.ok) throw new ApiError(res.status, data);
+  if (!res.ok) {
+    // Esta aba está rodando uma versão antiga e pediu algo que o site não
+    // atende mais. Recarregar é o que resolve, e a ação já falhou de
+    // qualquer forma — não há nada em andamento para atrapalhar.
+    if (data?.code === 'versao_antiga') location.reload();
+    throw new ApiError(res.status, data);
+  }
   return data;
 }
 

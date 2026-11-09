@@ -11,7 +11,10 @@
 [build]
   publish = "public"
   functions = "netlify/functions"
-  command = ""
+  # O site continua sem etapa de build de verdade. Este comando só grava um
+  # arquivo com a identidade da publicação, que o site usa para perceber que
+  # saiu versão nova e se recarregar em abas deixadas abertas.
+  command = "node scripts/gera-versao.js"
 
 [build.environment]
   NODE_VERSION = "22"

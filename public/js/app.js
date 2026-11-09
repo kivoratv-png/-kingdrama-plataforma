@@ -33,7 +33,41 @@ export async function refreshMe() {
 }
 export const isActive = () => Boolean(state.me?.user && state.me.access?.active);
 
+// ------------------------------------------------------- Versão desta aba
+// Uma aba aberta continua rodando o código que baixou quando abriu. Publicar
+// não alcança quem já está com o site aberto, e aí a tela antiga conversa com
+// o servidor novo: dá erro sem sentido, como pedir um código de acesso que o
+// site não usa mais.
+//
+// A aba compara a versão publicada com a que leu ao abrir. Quando muda, a
+// próxima navegação deixa de ser por dentro e vira um carregamento de
+// verdade. Esperar o clique é de propósito: a pessoa já estava saindo
+// daquela tela, então nada do que ela digitou se perde — bem diferente de
+// recarregar por baixo dela no meio de um formulário.
+let versaoDaAba = null;
+let saiuVersaoNova = false;
+let ultimaConferida = 0;
+
+async function confereVersao() {
+  if (saiuVersaoNova || Date.now() - ultimaConferida < 60000) return;
+  ultimaConferida = Date.now();
+  let publicada = null;
+  try {
+    const r = await fetch('/config/versao.json', { cache: 'no-store' });
+    if (r.ok) publicada = (await r.json())?.versao || null;
+  } catch { /* sem rede: fica como está */ }
+  if (!publicada) return;
+  if (!versaoDaAba) { versaoDaAba = publicada; return; }
+  if (publicada !== versaoDaAba) saiuVersaoNova = true;
+}
+
+// Voltar para uma aba esquecida é justamente quando ela tende a estar velha.
+document.addEventListener('visibilitychange', () => { if (!document.hidden) confereVersao(); });
+
 export function navigate(to, { replace = false } = {}) {
+  // Saiu versão nova enquanto esta aba estava aberta: carrega de verdade, em
+  // vez de trocar a tela por dentro mantendo o código antigo rodando.
+  if (saiuVersaoNova) { location.href = to; return; }
   if (replace) history.replaceState({}, '', to);
   else {
     history.replaceState({ ...history.state, scrollY: window.scrollY }, '');
@@ -45,6 +79,7 @@ export function navigate(to, { replace = false } = {}) {
 let renderSeq = 0;
 let unmountCurrent = null; // limpeza da página anterior (ex.: parar o player HLS)
 export async function render() {
+  confereVersao(); // sem await: não atrasa a tela, só marca para a próxima
   const seq = ++renderSeq;
   unmountCurrent?.();
   unmountCurrent = null;

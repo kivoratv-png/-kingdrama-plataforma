@@ -340,6 +340,18 @@
       return json(503, { error: 'O pagamento ainda não está ligado. Fale com o suporte para liberar seu acesso.' });
     }
 
+    // Chamada de autenticação que esta versão não conhece mais. Quem faz isso
+    // é uma aba aberta antes da última publicação, rodando o código antigo.
+    // Sem este desvio, o pedido caía na verificação de acesso logo abaixo e
+    // respondia "Entre na sua conta para continuar" — mandando a pessoa fazer
+    // exatamente o que ela já estava tentando fazer.
+    if (p.startsWith('/api/auth/')) {
+      return json(409, {
+        error: 'Esta página está aberta há um tempo e saiu uma versão nova. Recarregando…',
+        code: 'versao_antiga',
+      });
+    }
+
     if (!p.startsWith('/api/')) return naoEncontrado();
 
     // ---- Daqui para baixo, só com acesso liberado

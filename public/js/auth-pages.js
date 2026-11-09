@@ -1,4 +1,4 @@
-// Cadastro, entrada por código/link, acesso pendente e retorno do checkout.
+// Cadastro, entrada com e-mail e senha, acesso pendente e retorno do checkout.
 import { api, esc, icon } from './lib.js';
 import { statusBadge } from './pages.js';
 
@@ -10,69 +10,6 @@ function afterLoginPath() {
   let p = null;
   try { p = sessionStorage.getItem('kd_after_login'); sessionStorage.removeItem('kd_after_login'); } catch { /* indisponível */ }
   return p && p.startsWith('/') && !p.startsWith('//') ? p : '/';
-}
-
-// ------------------------------------------------------------ Etapa do código (comum a entrar e cadastro)
-function codeStep(email) {
-  return `<span class="eyebrow">Verifique seu e-mail</span>
-    <h1>Digite o código</h1>
-    <p class="lead">Se <span class="email-pill">${esc(email)}</span> estiver cadastrado, enviamos um código de 6 dígitos e um link de acesso. Ambos valem por 15 minutos e só podem ser usados uma vez.</p>
-    <div data-msg></div>
-    <form data-code novalidate>
-      <div class="field"><label for="code">Código de acesso</label>
-        <input class="input code" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="6" required aria-describedby="code-hint">
-        <span class="hint" id="code-hint">Não chegou? Confira a caixa de spam ou promoções.</span></div>
-      <button class="btn btn-primary btn-block" type="submit">Entrar</button>
-    </form>
-    <p class="foot"><button class="link" type="button" data-resend disabled>Reenviar código</button> · <button class="link" type="button" data-change>Usar outro e-mail</button></p>`;
-}
-
-function mountCodeStep(card, { email, resend, ctx, onChange }) {
-  const msg = card.querySelector('[data-msg]');
-  const form = card.querySelector('[data-code]');
-  const input = form.code;
-  const btn = form.querySelector('button[type=submit]');
-  const resendBtn = card.querySelector('[data-resend]');
-  input.focus();
-  let wait = 30;
-  const tick = setInterval(() => {
-    if (!resendBtn.isConnected) return clearInterval(tick);
-    wait -= 1;
-    resendBtn.disabled = wait > 0;
-    resendBtn.textContent = wait > 0 ? `Reenviar código (${wait}s)` : 'Reenviar código';
-    if (wait <= 0) clearInterval(tick);
-  }, 1000);
-  const submit = async () => {
-    const code = input.value.replace(/\D/g, '');
-    if (code.length !== 6) { msg.innerHTML = '<div class="alert alert-error" role="alert">Digite os 6 dígitos do código.</div>'; return; }
-    btn.disabled = true; btn.textContent = 'Verificando…';
-    try {
-      await api('/api/auth/verify', { method: 'POST', body: { email, code } });
-      await ctx.refreshMe();
-      ctx.navigate(afterLoginPath(), { replace: true });
-    } catch (e) {
-      msg.innerHTML = `<div class="alert alert-error" role="alert">${esc(e.message)}</div>`;
-      btn.disabled = false; btn.textContent = 'Entrar';
-      input.select();
-    }
-  };
-  input.addEventListener('input', () => {
-    input.value = input.value.replace(/\D/g, '').slice(0, 6);
-    if (input.value.length === 6) submit();
-  });
-  form.addEventListener('submit', (e) => { e.preventDefault(); submit(); });
-  resendBtn.addEventListener('click', async () => {
-    resendBtn.disabled = true;
-    try {
-      await resend();
-      msg.innerHTML = '<div class="alert alert-ok" role="status">Enviamos um novo código. O anterior deixou de valer.</div>';
-      wait = 30;
-    } catch (e) {
-      msg.innerHTML = `<div class="alert alert-error" role="alert">${esc(e.message)}</div>`;
-      resendBtn.disabled = false;
-    }
-  });
-  card.querySelector('[data-change]').addEventListener('click', onChange);
 }
 
 // ------------------------------------------------------------ Entrar
