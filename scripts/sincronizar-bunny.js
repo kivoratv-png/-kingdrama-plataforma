@@ -42,6 +42,10 @@ const chaveSlug = (s) => semAcento(s).trim()
   .replace(/\.(mp4|mkv|avi|mov|m4v|ts|webm)$/i, '')
   .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
+// Tira o número do fim e junta hífens repetidos: serve para comparar um nome de
+// arquivo com um id do banco quando um dos dois perdeu o número pelo caminho.
+const semNumero = (s) => chaveSlug(s).replace(/-+/g, '-').replace(/-?\d{6,}$/, '').replace(/-+$/, '');
+
 const chaveNome = (s) => semAcento(s)
   .replace(/\.(mp4|mkv|avi|mov|m4v|ts|webm)$/i, '')
   .replace(/[^a-z0-9]+/g, ' ').trim();
@@ -84,21 +88,34 @@ async function listaDaBunny() {
   const porIdLimpo = new Map(titulos.map((t) => [chaveSlug(t.id), t]));
   const porNumero = new Map();   // o número do fim do slug identifica o item na origem
   const porNome = new Map();
+  const porBase = new Map();     // id sem o número do fim e sem hífen repetido
   for (const t of titulos) {
     const n = (t.id.match(/(\d{6,})$/) || [])[1];
     if (n && !porNumero.has(n)) porNumero.set(n, t);
     const k = chaveNome(t.name);
     if (k && !porNome.has(k)) porNome.set(k, t);
+    const base = semNumero(t.id);
+    if (base) porBase.set(base, [...(porBase.get(base) || []), t]);
   }
 
   function donoDoVideo(v) {
     const arquivo = chaveSlug(v.title);
     const numero = (arquivo.match(/(\d{6,})$/) || [])[1];
+    // Última tentativa: comparar sem o número do fim e com hífens repetidos
+    // colapsados. Resolve o caso do arquivo que veio com o nome de exibição
+    // enquanto o título foi renomeado no banco — foi o que aconteceu com
+    // "A Herdeira Ítalo-...", cujo id tem hífen duplo e número, e o arquivo não
+    // tem nenhum dos dois. Só vale quando sobra um candidato único, senão dois
+    // títulos que só diferem pelo número acabariam trocados.
+    const base = semNumero(arquivo);
+    const porAproximacao = base && porBase.get(base);
+
     return porId.get(arquivo)
       || porIdLimpo.get(arquivo)
       || porId.get(idDoTitulo(arquivo, v.title))
       || (numero ? porNumero.get(numero) : null)
       || porNome.get(chaveNome(v.title))
+      || (porAproximacao && porAproximacao.length === 1 ? porAproximacao[0] : null)
       || null;
   }
 
