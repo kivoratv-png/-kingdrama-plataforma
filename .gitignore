@@ -9,3 +9,6 @@ Thumbs.db
 # Skills da Netlify para assistentes de IA (instaladas pelo netlify init).
 # Uteis localmente, mas nao fazem parte do site.
 .claude/
+
+# Capas prontas para subir no Supabase Storage (geradas por script, nao versionar).
+capas-para-subir/
