@@ -71,11 +71,24 @@
     for (const k of [...cache.keys()]) if (k.startsWith(prefixo)) cache.delete(k);
   }
 
-  // Entrou, saiu ou trocou de conta: nada do usuário anterior pode sobrar em
-  // memória. TOKEN_REFRESHED é só a renovação do token do mesmo usuário, e aí
-  // limpar seria jogar fora cache bom a cada hora.
-  sb.auth.onAuthStateChange((evento) => {
-    if (evento !== 'TOKEN_REFRESHED') invalida();
+  // Nada do usuário anterior pode sobrar quando se troca de conta. Mas o
+  // Supabase avisa a cada mudança de estado da sessão, e a maioria desses
+  // avisos não é troca de pessoa nenhuma:
+  //   INITIAL_SESSION  - a sessão sendo relida do localStorage na abertura;
+  //   TOKEN_REFRESHED  - o mesmo usuário renovando o token.
+  // Limpar nesses casos apagava o cache recém-preenchido no meio do próprio
+  // carregamento da página, e tudo era consultado duas vezes.
+  //
+  // O critério certo é a identidade: só limpa quando o dono da sessão muda.
+  let donoDaSessao = null;
+  sb.auth.onAuthStateChange((evento, sessao) => {
+    const id = sessao?.user?.id || null;
+    if (evento === 'TOKEN_REFRESHED') return;
+    // Primeira notificação da página: só registra quem é. A memória acabou de
+    // nascer junto com a aba, não há o que vazar de outra conta.
+    if (evento === 'INITIAL_SESSION') { donoDaSessao = id; return; }
+    if (evento === 'USER_UPDATED') { invalida('sessao'); return; }
+    if (id !== donoDaSessao) { donoDaSessao = id; invalida(); }
   });
 
   // ---------------------------------------------------------------- Banners
@@ -244,7 +257,11 @@
     // ---- Vitrine da página de visitante (sem login)
     if (metodo === 'GET' && p === '/api/showcase') {
       const b = await carregaBanners();
-      return json(200, { total: 0, titles: [], posters: (b.slots || []).filter((s) => s.active).map((s) => s.image.mobile) });
+      // O mural da tela de visitante mostra essas imagens a 150x200. Usa as
+      // miniaturas: a versão cheia baixava mais de 1 MB na primeira tela que
+      // o visitante vê — justamente onde se decide se ele fica ou desiste.
+      const posters = (b.slots || []).filter((s) => s.active).map((s) => s.thumb || s.image.mobile);
+      return json(200, { total: 0, titles: [], posters });
     }
 
     // ---- Criar conta
@@ -462,6 +479,7 @@
     if (!data?.session) return;
     buscaTitulos().catch(() => {});
     listaCategorias().catch(() => {});
+    idsFavoritos().catch(() => {}); // a home marca os corações com isto
   }).catch(() => {});
 
   window.__KD__ = { version: 'supabase-1.0', catalogReady: true };
