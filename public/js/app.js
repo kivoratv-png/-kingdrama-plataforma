@@ -2,12 +2,15 @@
 import { api, esc, icon, initials, firstName, enhance } from './lib.js';
 import * as pages from './pages.js';
 import * as authPages from './auth-pages.js';
+import { dashboard } from './admin.js';
+import { clearActivity, sendActivity } from './activity.js';
 
 export const state = { me: null, site: null };
 const app = document.getElementById('app');
 
 // guard: 'public' (qualquer um) | 'guest' (só visitante) | 'user' (logado) | 'active' (acesso liberado)
 const routes = [
+  { re: /^\/admin$/, guard: 'user', page: dashboard, bare: true },
   { re: /^\/$/, guard: 'root' },
   { re: /^\/inicio$/, guard: 'active', page: pages.home, tab: 'inicio', overHero: true },
   { re: /^\/buscar$/, guard: 'active', page: pages.search, tab: 'buscar' },
@@ -123,6 +126,7 @@ export async function render() {
   const cleanup = route.page.mount?.(main, ctx);
   if (typeof cleanup === 'function') unmountCurrent = cleanup;
   restoreScroll();
+  sendActivity();
 }
 
 function restoreScroll() {
@@ -202,6 +206,7 @@ document.addEventListener('click', async (e) => {
   if (!e.target.closest('.user-menu')) document.querySelectorAll('.menu-pop.open').forEach((p) => p.classList.remove('open'));
   if (e.target.closest('[data-logout]')) {
     e.preventDefault();
+    await clearActivity();
     await api('/api/auth/logout', { method: 'POST' }).catch(() => {});
     await refreshMe();
     navigate('/', { replace: true });

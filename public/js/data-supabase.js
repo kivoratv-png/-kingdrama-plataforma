@@ -467,10 +467,17 @@
       const { data } = await sb.auth.getSession();
       const jwt = data?.session?.access_token;
       if (!jwt) return json(401, { error: 'Entre na sua conta para assistir.', code: 'unauthenticated' });
-      const r = await fetchOriginal(
-        `/.netlify/functions/play?title=${encodeURIComponent(m[1])}&number=${encodeURIComponent(m[2])}`,
-        { headers: { Authorization: `Bearer ${jwt}` } }
-      );
+      let r;
+      try {
+        r = await fetchOriginal(
+          `/.netlify/functions/play?title=${encodeURIComponent(m[1])}&number=${encodeURIComponent(m[2])}`,
+          { headers: { Authorization: `Bearer ${jwt}` } }
+        );
+      } catch (error) {
+        document.dispatchEvent(new CustomEvent('kd:playback-error', { detail: 'network_error' }));
+        throw error;
+      }
+      if (!r.ok) document.dispatchEvent(new CustomEvent('kd:playback-error', { detail: `http_${r.status}` }));
       const corpoResposta = await r.text();
       return new Response(corpoResposta, { status: r.status, headers: { 'Content-Type': 'application/json' } });
     }
