@@ -1,14 +1,15 @@
 // Roteador, estado da sessão e layout.
-import { api, esc, icon, initials, enhance } from './lib.js?v=c82799fede92';
-import * as pages from './pages.js?v=c82799fede92';
-import * as authPages from './auth-pages.js?v=c82799fede92';
-import { dashboard } from './admin.js?v=c82799fede92';
-import { clearActivity, sendActivity } from './activity.js?v=c82799fede92';
-import { privacy } from './privacy.js?v=c82799fede92';
-import { profile } from './profile.js?v=c82799fede92';
-import { requests } from './requests.js?v=c82799fede92';
-import { offers, offerPath } from './offers.js?v=c82799fede92';
-import { referrals } from './referrals.js?v=c82799fede92';
+import { api, esc, icon, initials, enhance } from './lib.js?v=bee0a3ccd446';
+import * as pages from './pages.js?v=bee0a3ccd446';
+import * as authPages from './auth-pages.js?v=bee0a3ccd446';
+import { dashboard } from './admin.js?v=bee0a3ccd446';
+import { clearActivity, sendActivity } from './activity.js?v=bee0a3ccd446';
+import { privacy } from './privacy.js?v=bee0a3ccd446';
+import { profile } from './profile.js?v=bee0a3ccd446';
+import { requests } from './requests.js?v=bee0a3ccd446';
+import { offers, offerPath } from './offers.js?v=bee0a3ccd446';
+import { referrals } from './referrals.js?v=bee0a3ccd446';
+import { mountCategoryMenu } from './category-menu.js?v=bee0a3ccd446';
 
 export const state = { me: null, site: null };
 const app = document.getElementById('app');
@@ -92,6 +93,7 @@ export function navigate(to, { replace = false } = {}) {
 
 let renderSeq = 0;
 let unmountCurrent = null; // limpeza da página anterior (ex.: parar o player HLS)
+let unmountCategoryMenu = null;
 export async function render() {
   confereVersao(); // sem await: não atrasa a tela, só marca para a próxima
   const seq = ++renderSeq;
@@ -149,11 +151,13 @@ function restoreScroll() {
 function sessionStorageSet(k, v) { try { sessionStorage.setItem(k, v); } catch { /* indisponível */ } }
 
 function shellBare(html) {
+  unmountCategoryMenu?.();unmountCategoryMenu=null;
   app.innerHTML = `<main id="main" class="no-tabbar">${html}</main>`;
   enhance(app);
 }
 
 function shell(html, route) {
+  unmountCategoryMenu?.();unmountCategoryMenu=null;
   const u = state.me?.user;
   const tab = route.tab;
   const cur = (t) => (tab === t ? 'aria-current="page"' : '');
@@ -162,7 +166,7 @@ function shell(html, route) {
     <a href="/inicio" class="logo" aria-label="KingDrama — início"><img src="/img/logo.png" alt="" width="300" height="100"></a>
     <nav class="topnav" aria-label="Principal">
       <a href="/inicio" ${cur('inicio')}>Início</a>
-      <a href="/categorias" ${cur('categorias')}>Categorias</a>
+      <button type="button" class="category-toggle" data-category-toggle aria-expanded="false" aria-controls="category-menu-panel" ${tab==='categorias'?'data-category-active':''}>Categorias ${icon.chev}</button>
       <a href="/favoritos" ${cur('lista')}>Favoritos</a>
       <a href="/pedidos" ${cur('pedidos')}>Pedir</a>
     </nav>
@@ -191,12 +195,13 @@ function shell(html, route) {
   <nav class="tabbar with-requests" aria-label="Navegação">
     <a href="/inicio" ${cur('inicio')}>${icon.home}<span>Início</span></a>
     <a href="/buscar" ${cur('buscar')}>${icon.search}<span>Buscar</span></a>
-    <a href="/categorias" ${cur('categorias')}>${icon.grid}<span>Categorias</span></a>
+    <button type="button" class="category-toggle" data-category-toggle aria-expanded="false" aria-controls="category-menu-panel" ${tab==='categorias'?'data-category-active':''}>${icon.grid}<span>Categorias</span></button>
     <a href="/favoritos" ${cur('lista')}>${icon.heart}<span>Favoritos</span></a>
     <a href="/pedidos" ${cur('pedidos')}>${icon.request}<span>Pedir</span></a>
     <a href="/perfil" ${cur('perfil')}>${icon.user}<span>Perfil</span></a>
-  </nav>`;
+  </nav><nav id="category-menu-panel" class="category-menu-panel" data-category-panel aria-label="Escolher categoria" hidden></nav>`;
   enhance(app);
+  unmountCategoryMenu=mountCategoryMenu(app);
 
   const menu = app.querySelector('.user-menu');
   const btn = menu.querySelector('button'), pop = menu.querySelector('.menu-pop');

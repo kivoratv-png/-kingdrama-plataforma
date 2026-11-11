@@ -1,6 +1,7 @@
-import { api, esc, icon, card, row, enhance, toast, smallCover, initials } from './lib.js?v=c82799fede92';
-import { state } from './app.js?v=c82799fede92';
-import { accountBanner, mountAccountBanner } from './account-banner.js?v=c82799fede92';
+import { api, esc, icon, card, row, enhance, toast, smallCover, initials } from './lib.js?v=bee0a3ccd446';
+import { state } from './app.js?v=bee0a3ccd446';
+import { accountBanner, mountAccountBanner } from './account-banner.js?v=bee0a3ccd446';
+import { categoryLinks } from './category-menu.js?v=bee0a3ccd446';
 
 const statusLabel = { active: 'Ativo', pending: 'Pendente', canceled: 'Cancelado', refunded: 'Reembolsado', expired: 'Expirado', chargeback: 'Contestado' };
 export const statusBadge = (s) => `<span class="status-badge ${s === 'active' ? 'status-active' : s === 'pending' ? 'status-pending' : 'status-other'}">${esc(statusLabel[s] || s)}</span>`;
@@ -291,9 +292,7 @@ export async function categories() {
       <a class="btn btn-primary" href="/inicio">Voltar ao início</a></div></div>`;
   }
   return `<div class="page-head"><h1>Categorias</h1><p>Escolha um tema e encontre sua próxima série.</p></div>
-    <div class="cat-grid">${cats.map((c) => `<a class="cat-tile" href="/categoria/${esc(c.id)}">
-      ${(c.covers?.length || c.cover) ? `<div class="cat-art" aria-hidden="true">${(c.covers?.length ? c.covers : [c.cover]).slice(0,3).map((cover,i) => `<img class="cat-poster cat-poster-${i+1}" src="${esc(smallCover(cover))}" alt="" width="360" height="480" loading="lazy" decoding="async">`).join('')}</div>` : ''}
-      <strong>${esc(c.name)}</strong><span>${c.count} títulos</span></a>`).join('')}</div>`;
+    <nav class="wrap category-text-list" aria-label="Escolher categoria">${categoryLinks(cats)}</nav>`;
 }
 
 export async function category(ctx) {
@@ -469,7 +468,7 @@ let hlsLib;
 function loadHls() {
   if (window.Hls) return Promise.resolve(window.Hls);
   hlsLib ||= new Promise((resolve, reject) => {
-    const s = Object.assign(document.createElement('script'), { src: '/vendor/hls.min.js?v=c82799fede92', async: true });
+    const s = Object.assign(document.createElement('script'), { src: '/vendor/hls.min.js?v=bee0a3ccd446', async: true });
     s.onload = () => resolve(window.Hls);
     s.onerror = () => { hlsLib = null; reject(new Error('hls.js indisponível')); };
     document.head.append(s);

@@ -1,4 +1,4 @@
-import { api,esc,icon } from './lib.js?v=c82799fede92';
+import { api,esc,icon } from './lib.js?v=bee0a3ccd446';
 const labels={received:'Pedido recebido',reviewing:'Em análise',adding:'Sendo adicionado',available:'Já disponível',unavailable:'Indisponível no momento'};
 export async function requests(ctx) {
   if(ctx.state.me.user.isAdmin)return `<div class="wrap narrow page-head"><h1>Pedidos de clientes</h1><p>Os pedidos são gerenciados na seção exclusiva do painel administrativo.</p></div>`;
