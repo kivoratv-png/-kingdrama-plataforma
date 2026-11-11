@@ -1,15 +1,18 @@
 // Roteador, estado da sessão e layout.
-import { api, esc, icon, initials, firstName, enhance } from './lib.js';
+import { api, esc, icon, initials, enhance } from './lib.js';
 import * as pages from './pages.js';
 import * as authPages from './auth-pages.js';
 import { dashboard } from './admin.js';
 import { clearActivity, sendActivity } from './activity.js';
+import { privacy } from './privacy.js';
+import { profile } from './profile.js';
 
 export const state = { me: null, site: null };
 const app = document.getElementById('app');
 
 // guard: 'public' (qualquer um) | 'guest' (só visitante) | 'user' (logado) | 'active' (acesso liberado)
 const routes = [
+  { re: /^\/politica-de-privacidade$/, guard: 'public', page: privacy, bare: true },
   { re: /^\/admin$/, guard: 'user', page: dashboard, bare: true },
   { re: /^\/$/, guard: 'root' },
   { re: /^\/inicio$/, guard: 'active', page: pages.home, tab: 'inicio', overHero: true },
@@ -21,7 +24,7 @@ const routes = [
   { re: /^\/minha-lista$/, guard: 'active', page: pages.favorites, tab: 'lista' },
   { re: /^\/em-breve$/, guard: 'active', page: pages.comingSoon },
   { re: /^\/historico$/, guard: 'active', page: pages.watchHistory, tab: 'perfil' },
-  { re: /^\/perfil$/, guard: 'user', page: pages.profile, tab: 'perfil' },
+  { re: /^\/perfil$/, guard: 'user', page: profile, tab: 'perfil' },
   { re: /^\/entrar$/, guard: 'guest', page: authPages.login, bare: true },
   { re: /^\/cadastro$/, guard: 'guest', page: authPages.signup, bare: true },
   { re: /^\/recuperar$/, guard: 'guest', page: authPages.recover, bare: true },
@@ -118,6 +121,7 @@ export async function render() {
   } catch (e) {
     if (e.status === 401) { await refreshMe(); return navigate('/entrar', { replace: true }); }
     if (e.status === 403 && e.code === 'access_pending') { await refreshMe(); return navigate('/acesso', { replace: true }); }
+    if (e.status === 403 && e.code === 'device_limit') return navigate('/perfil', { replace: true });
     html = pages.errorPage(e);
   }
   if (seq !== renderSeq) return; // navegação mais recente em andamento
@@ -152,6 +156,7 @@ function shell(html, route) {
       <a href="/inicio" ${cur('inicio')}>Início</a>
       <a href="/categorias" ${cur('categorias')}>Categorias</a>
       <a href="/minha-lista" ${cur('lista')}>Minha lista</a>
+      <a href="/perfil" ${cur('perfil')}>Perfil</a>
     </nav>
     <div class="spacer"></div>
     <form class="top-search" role="search" action="/buscar">
@@ -167,6 +172,7 @@ function shell(html, route) {
         <a role="menuitem" href="/minha-lista">${icon.heart} Minha lista</a>
         <a role="menuitem" href="/historico">${icon.clock} Histórico</a>
         <a role="menuitem" href="/perfil">${icon.user} Perfil e assinatura</a>
+        <a role="menuitem" href="/perfil">${icon.lock} Excluir conta</a>
         <button role="menuitem" type="button" class="danger" data-logout>${icon.logout} Sair</button>
       </div>
     </div>
@@ -177,7 +183,7 @@ function shell(html, route) {
     <a href="/buscar" ${cur('buscar')}>${icon.search}<span>Buscar</span></a>
     <a href="/categorias" ${cur('categorias')}>${icon.grid}<span>Categorias</span></a>
     <a href="/minha-lista" ${cur('lista')}>${icon.heart}<span>Minha lista</span></a>
-    <a href="/perfil" ${cur('perfil')}>${icon.user}<span>${esc(firstName(u) || 'Perfil')}</span></a>
+    <a href="/perfil" ${cur('perfil')}>${icon.user}<span>Perfil</span></a>
   </nav>`;
   enhance(app);
 

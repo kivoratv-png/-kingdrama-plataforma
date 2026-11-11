@@ -477,3 +477,30 @@ a.chip:hover { color: var(--text); border-color: var(--line-strong); }
 
 .cover-fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: 8px; text-align: center; font-size: 12px; color: var(--faint); background: var(--surface); }
 
+/* Conta e privacidade */
+.profile-settings .settings-section { display:grid; gap:16px; min-width:0; }
+.settings-section h2 { font-size:18px; margin:0; }
+.settings-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.settings-section .hint { margin:0; line-height:1.6; }
+.account-facts { display:grid; gap:14px; margin:0; }
+.account-facts div { display:grid; gap:4px; }
+.account-facts dt { color:var(--muted); font-size:13px; }
+.account-facts dd { margin:0; overflow-wrap:anywhere; }
+.profile-settings .who { min-width:0; overflow-wrap:anywhere; }
+.device-row { display:flex; gap:14px; justify-content:space-between; align-items:center; padding:16px 0; border-bottom:1px solid var(--line, #303039); }
+.device-row > div { display:grid; gap:6px; min-width:0; }
+.device-row span { font-size:12px; color:var(--muted); }
+.device-row strong { font-size:14px; overflow-wrap:anywhere; }
+.device-row button { flex-shrink:0; }
+.delete-summary { cursor:pointer; color:var(--danger); padding:8px 0 16px; }
+.delete-confirm { display:flex; gap:10px; align-items:flex-start; font-size:14px; line-height:1.5; }
+.delete-confirm input { margin-top:4px; flex-shrink:0; }
+.btn-danger { background:var(--danger); color:#fff; }
+.danger-section { border:1px solid var(--danger); }
+.privacy-policy { padding-top:32px; padding-bottom:64px; line-height:1.8; overflow-wrap:anywhere; }
+.privacy-policy h1 { line-height:1.2; margin:28px 0 20px; }
+.privacy-policy h2 { font-size:20px; line-height:1.4; margin:32px 0 12px; }
+.privacy-policy ul,.privacy-policy ol { padding-left:24px; }
+.privacy-policy li { margin:8px 0; }
+.privacy-policy a { text-decoration:underline; }
+@media(max-width:480px) { .device-row { align-items:flex-start; flex-direction:column; } }

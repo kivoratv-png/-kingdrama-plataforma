@@ -397,8 +397,17 @@ export async function player(ctx) {
 }
 player.mount = (root, ctx) => {
   const data = player.data;
+  let sessionAlive = true;
+  const checkSession = async () => {
+    const { data: allowed, error } = await window.__KD_SB__.rpc('account_session_allowed');
+    if (sessionAlive && !error && allowed === false) ctx.navigate('/perfil', { replace: true });
+  };
+  const sessionTimer = setInterval(() => { checkSession().catch(() => {}); }, 30000);
+  const onVisible = () => { if (!document.hidden) checkSession().catch(() => {}); };
+  document.addEventListener('visibilitychange', onVisible);
+  const stopSessionCheck = () => { sessionAlive = false; clearInterval(sessionTimer); document.removeEventListener('visibilitychange', onVisible); };
   const video = root.querySelector('video');
-  if (!video || !data) return;
+  if (!video || !data) return stopSessionCheck;
   let hls = null;
   let alive = true;
   const fail = () => {
@@ -445,7 +454,7 @@ player.mount = (root, ctx) => {
   video.addEventListener('ended', () => {
     if (data.next) ctx.navigate(`/assistir/${encodeURIComponent(data.episode.titleId)}/${data.next}`, { replace: true });
   });
-  return () => { save(); alive = false; hls?.destroy(); };
+  return () => { stopSessionCheck(); save(); alive = false; hls?.destroy(); };
 };
 
 // hls.js (public/vendor) só é baixado quando um episódio HLS é aberto fora do iPhone.
@@ -475,47 +484,6 @@ export async function watchHistory() {
     ${items.length ? `<div class="grid">${items.map((i) => card({ id: i.id, name: `${i.name} · ep. ${i.number}`, cover: i.cover })).join('')}</div>`
       : `<div class="wrap"><div class="empty">${icon.clock}<strong>Você ainda não assistiu nada</strong><p>Quando começar um episódio, ele aparece aqui.</p><a class="btn btn-primary" href="/inicio">Começar a assistir</a></div></div>`}`;
 }
-
-// ============================================================ Perfil
-export async function profile(ctx) {
-  const { user, access } = ctx.state.me;
-  const since = new Date(user.createdAt + 'Z').toLocaleDateString('pt-BR');
-  return `<div class="page-head narrow"><h1>Perfil</h1></div>
-  <div class="wrap narrow stack">
-    <div class="profile-card">
-      <span class="avatar lg">${esc(initials(user))}</span>
-      <div class="who"><strong>${esc(user.name || 'Sem nome')}</strong><span>${esc(user.email)}</span></div>
-    </div>
-    <form class="profile-card" style="display:block" data-name-form>
-      <div class="field" style="margin-bottom:12px"><label for="name">Nome de exibição</label>
-        <input class="input" id="name" name="name" maxlength="60" value="${esc(user.name || '')}" autocomplete="name" placeholder="Como quer ser chamado(a)"></div>
-      <button class="btn btn-ghost" type="submit">Salvar nome</button>
-      <p class="hint" style="color:var(--faint);font-size:13px;margin:12px 0 0">O e-mail identifica sua conta e sua assinatura; para trocá-lo, fale com o suporte.</p>
-    </form>
-    <div class="profile-card" style="display:grid;gap:10px">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><strong>Assinatura</strong>${statusBadge(access.status)}</div>
-      <span style="color:var(--muted);font-size:14px">Conta criada em ${esc(since)}${access.periodEnd ? ` · válida até ${esc(new Date(access.periodEnd + 'Z').toLocaleDateString('pt-BR'))}` : ''}</span>
-      ${access.active ? '' : '<a class="btn btn-primary" href="/acesso">Ver situação do acesso</a>'}
-    </div>
-    <nav class="list-links" aria-label="Conta">
-      ${access.active ? `<a href="/minha-lista">${icon.heart} Minha lista ${icon.chev}</a><a href="/historico">${icon.clock} Histórico ${icon.chev}</a>` : ''}
-      <button type="button" data-logout style="color:var(--danger)">${icon.logout} Sair da conta</button>
-    </nav>
-    <p class="hint">A administração pode consultar sua página atual, título aberto e última atividade para acompanhar acessos e problemas de reprodução. O acompanhamento começa após o login.</p>
-  </div>`;
-}
-profile.mount = (root, ctx) => {
-  root.querySelector('[data-name-form]').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = e.currentTarget.name.value;
-    try {
-      await api('/api/me', { method: 'PATCH', body: { name } });
-      await ctx.refreshMe();
-      toast('Nome atualizado');
-      ctx.navigate('/perfil', { replace: true });
-    } catch (err) { toast(err.message); }
-  });
-};
 
 // ============================================================ Erros
 // ============================================================ Em breve

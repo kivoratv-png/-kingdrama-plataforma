@@ -82,6 +82,14 @@ exports.handler = async (event) => {
 
   try {
     // ---- 2. A assinatura está ativa?
+    const sessionCheck = await fetch(`${SUPABASE_URL}/rest/v1/rpc/account_session_allowed`, {
+      method: 'POST', headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${jwt}`, 'Content-Type': 'application/json' },
+      body: '{}', signal: AbortSignal.timeout(8000),
+    });
+    if (!sessionCheck.ok) return json(503, { error: 'Não foi possível validar o dispositivo.' });
+    if ((await sessionCheck.json()) !== true) return json(403, {
+      error: 'Limite de dispositivos atingido ou sessão desconectada. Gerencie seus dispositivos no Perfil.', code: 'device_limit',
+    });
     const assinaturas = await comoServico(
       `subscriptions?select=status,ends_at&user_id=eq.${encodeURIComponent(userId)}&status=eq.active&limit=5`
     );

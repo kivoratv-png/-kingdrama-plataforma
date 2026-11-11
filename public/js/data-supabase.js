@@ -155,6 +155,10 @@
     if (precisaAcesso && !me.access.active) {
       return { erro: json(403, { error: 'Seu acesso ainda não foi liberado.', code: 'access_pending', access: me.access }), me };
     }
+    if (precisaAcesso) {
+      const { data: allowed, error } = await sb.rpc('account_session_allowed');
+      if (error || !allowed) return { erro: json(403, { error: 'Limite de dispositivos atingido. Acesse Perfil para desconectar outro dispositivo.', code: 'device_limit' }), me };
+    }
     return { erro: null, me };
   }
 
@@ -248,6 +252,25 @@
     const p = url.pathname;
     let m;
 
+    if (p === '/api/account' && metodo === 'POST') {
+      const { data } = await sb.auth.getSession();
+      if (!data?.session?.access_token) return json(401, { error: 'Entre na sua conta.' });
+      const response = await fetchOriginal('/.netlify/functions/account', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session.access_token}` },
+        body: JSON.stringify(corpo),
+      });
+      return response;
+    }
+    if (p === '/api/devices' && (metodo === 'GET' || metodo === 'DELETE')) {
+      const { erro } = await exigeLogin(false);
+      if (erro) return erro;
+      const { data, error } = metodo === 'GET' ? await sb.rpc('account_devices')
+        : await sb.rpc('account_revoke_device', { p_session: corpo.sessionId });
+      if (error) return json(400, { error: 'Não foi possível gerenciar os dispositivos. Tente novamente.' });
+      if (metodo === 'DELETE') invalida();
+      return json(200, metodo === 'GET' ? data : { ok: data });
+    }
+
     // ---- Configuração do site
     if (metodo === 'GET' && p === '/api/site') {
       const b = await carregaBanners();
@@ -319,7 +342,7 @@
     }
 
     if (metodo === 'POST' && p === '/api/auth/logout') {
-      await sb.auth.signOut();
+      await sb.auth.signOut({ scope: 'local' });
       return json(200, { ok: true });
     }
 
