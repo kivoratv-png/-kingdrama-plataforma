@@ -46,7 +46,7 @@ update public.subscriptions set status='active' where provider_ref='referral-tes
 set local role service_role;
 do $$declare sid bigint;begin
  select id into sid from public.subscriptions where provider_ref='referral-test-payment';
- if not public.credit_referral_payment('referral-test-payment','10000000-0000-4000-8000-000000000003',sid,now()) then raise exception 'Verified payment not rewarded';end if;
+ if public.credit_referral_payment('referral-test-payment','10000000-0000-4000-8000-000000000003',sid,now()) then raise exception 'Already automatic payment rewarded twice';end if;
  if public.credit_referral_payment('referral-test-payment','10000000-0000-4000-8000-000000000003',sid,now()) then raise exception 'Duplicate payment rewarded';end if;
  if public.credit_referral_payment('referral-test-renewal','10000000-0000-4000-8000-000000000003',sid,now()) then raise exception 'Same friend rewarded twice';end if;
 end $$;

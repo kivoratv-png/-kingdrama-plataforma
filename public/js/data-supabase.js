@@ -13,7 +13,9 @@
   'use strict';
 
   const CFG = window.__KD_CONFIG__ || {};
-  const invitationFromUrl = new URL(location.href).searchParams.get('ref') || '';
+  const invitationParams = new URL(location.href).searchParams;
+  const invitationFromUrl = [invitationParams.get('ref'), invitationParams.get('utm_source') === 'indicacao' ? invitationParams.get('utm_content') : '']
+    .find(value => /^[a-f0-9]{32}$/.test(value || '')) || '';
   let pendingInvitation = /^[a-f0-9]{32}$/.test(invitationFromUrl) ? invitationFromUrl : null;
   try {
     if (pendingInvitation) localStorage.setItem('kd_referral', JSON.stringify({ code: pendingInvitation, expires: Date.now() + 30 * 86400000 }));
@@ -275,6 +277,7 @@
       const { erro } = await exigeLogin(false); if (erro) return erro;
       const { data, error } = await sb.rpc(metodo === 'POST' ? 'create_referral_code' : 'referral_dashboard');
       if (error) return json(error.code === '42501' ? 403 : 400, { error: error.message || 'Não foi possível consultar as indicações.' });
+      if (metodo === 'GET') invalida('sessao');
       return json(200, metodo === 'POST' ? { code: data } : data);
     }
 

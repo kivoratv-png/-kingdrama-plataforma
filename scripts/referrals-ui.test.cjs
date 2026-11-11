@@ -17,4 +17,5 @@ test('subscriber gets generation control and a reusable account-creation link',a
  const newSubscriber=await render({eligible:true,code:null,validReferrals:0,daysEarned:0});assert.ok(newSubscriber.includes('Gerar meu link de indicação'));
  const existing=await render({eligible:true,code:'a'.repeat(32),validReferrals:1,daysEarned:10});
  assert.ok(existing.includes('https://kingdrama.test/cadastro?ref='+'a'.repeat(32)));assert.ok(existing.includes('data-copy-referral'));
+ assert.ok(existing.includes('utm_source=indicacao'));assert.ok(existing.includes('utm_content='+'a'.repeat(32)));
 });
