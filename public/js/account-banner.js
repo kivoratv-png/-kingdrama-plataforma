@@ -1,4 +1,4 @@
-import { esc, icon } from './lib.js?v=75ad0bb5f98f';
+import { esc, icon } from './lib.js?v=87c96eb4393b';
 
 export function accountBanner() {
   const slides = [

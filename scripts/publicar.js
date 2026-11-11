@@ -49,13 +49,24 @@ const rodar = (args, opcoes = {}) =>
   });
 
 try {
+  // Draft deploys retain deploy-preview context when promoted. Function secrets
+  // must be present there too; otherwise promotion publishes a broken backend.
+  const siteId = require(path.join(raiz, '.netlify', 'state.json')).siteId;
+  const site = JSON.parse(rodar(['api','getSite','--data',JSON.stringify({site_id:siteId})]));
+  const variables = JSON.parse(rodar(['api','getEnvVars','--data',JSON.stringify({account_id:site.account_id,site_id:siteId})]));
+  const missing = ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','BUNNY_LIBRARY_ID','BUNNY_TOKEN_KEY'].filter(key=>{
+    const item=variables.find(variable=>variable.key===key);
+    return !item?.scopes?.includes('functions') || !item.values?.some(value=>['deploy-preview','all'].includes(value.context) && value.value);
+  });
+  if(missing.length)throw new Error(`Variáveis ausentes para as funções em deploy-preview: ${missing.join(', ')}. Corrija o contexto antes de publicar.`);
+  console.log('Configuração das funções conferida (valores protegidos).');
   console.log('1/3  gerando a identidade desta versão');
   execFileSync(process.execPath, [path.join(__dirname, 'gera-versao.js')], {
     cwd: raiz, stdio: 'inherit',
   });
 
   console.log('\n2/3  enviando os arquivos (como rascunho — é o que passa pelo bloqueio)');
-  const saida = rodar(['deploy', '--dir=public', '--functions=netlify/functions',
+  const saida = rodar(['deploy', '--dir=public', '--functions=netlify/functions', '--skip-functions-cache',
     '--message=publicacao via script (bloqueio de deploy da Netlify)']);
   process.stdout.write(saida);
 
@@ -65,11 +76,10 @@ try {
   const deployId = achado[1];
 
   console.log(`\n3/3  promovendo o deploy ${deployId} a produção`);
-  const siteId = require(path.join(raiz, '.netlify', 'state.json')).siteId;
   rodar(['api', 'restoreSiteDeploy', '--data',
     JSON.stringify({ site_id: siteId, deploy_id: deployId })]);
 
-  console.log('\npublicado: https://kingdrama.netlify.app');
+  console.log(`\npublicado: ${site.ssl_url || site.url}`);
 } catch (e) {
   console.error('\nfalhou:', e.message);
   if (e.stdout) process.stdout.write(String(e.stdout));

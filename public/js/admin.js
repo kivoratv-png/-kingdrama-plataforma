@@ -1,5 +1,5 @@
-import { esc } from './lib.js?v=75ad0bb5f98f';
-import { mountAdminRequests } from './admin-requests.js?v=75ad0bb5f98f';
+import { esc } from './lib.js?v=87c96eb4393b';
+import { mountAdminRequests } from './admin-requests.js?v=87c96eb4393b';
 
 const client = window.__KD_SB__;
 let status;
@@ -55,6 +55,7 @@ export async function dashboard() {
 
 dashboard.mount = (root, ctx) => {
   const content = root.querySelector('[data-admin-content]');
+  if (!content) return;
   let disposed = false;
   let busy = false;
   let timer;
