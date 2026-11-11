@@ -21,10 +21,12 @@ async function startup({loaded,published,url='https://kingdrama.test/',me={user:
     pages:{landing:async()=>'<p>Home</p>',home:async()=>'<p>Catalog</p>',title:async()=>'<p>Title details</p>',player:async()=>'<p>Player</p>'},authPages:{},profile:()=>'',privacy:()=>'',requests:()=>'',referrals:()=>'',dashboard:()=>'',
     esc:value=>String(value || ''),icon:new Proxy({},{get:()=>''}),initials:()=> 'T',
     enhance:()=>{},sendActivity:()=>{},clearActivity:()=>{},
-    fetch:async(path,options)=>{requests.push({path,options});return {ok:true,json:async()=>({versao:published})};},
+    fetch:async(route,options)=>{requests.push({path:route,options});return {ok:true,json:async()=>route==='/config/ofertas.json'?JSON.parse(fs.readFileSync(path.join(__dirname,'../public/config/ofertas.json'),'utf8')):({versao:published})};},
     api:async path=>path==='/api/me'?me:{},
   };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../public/js/offers.js'),'utf8').replace(/^import .+;\r?\n/gm,'').replace(/export /g,''),context);
+  // Router tests exercise rendering; offer interactions have their own DOM harness.
+  context.offers.mount=undefined;
   vm.runInNewContext(source,context);await context.boot;
   for(let i=0;i<8;i++)await Promise.resolve();
   return {redirects,requests,cleaned,handlers,app,location:context.location};
@@ -48,7 +50,7 @@ test('watch click routes an unpaid account to offers and preserves the selected 
   assert.equal(result.location.pathname,'/ofertas');
   assert.equal(new URL(result.location.href).searchParams.get('titulo'),'drama-a');
   assert.equal(new URL(result.location.href).searchParams.get('episodio'),'3');
-  assert.ok(result.app.innerHTML.includes('Ofertas em breve'));assert.equal(result.app.innerHTML.includes('<p>Player</p>'),false);
+  assert.ok(result.app.innerHTML.includes('Plano Mensal'));assert.equal(result.app.innerHTML.includes('<p>Player</p>'),false);
 });
 test('subscribed account still opens player directly',async()=>{
   const result=await startup({loaded:'222222222222',published:'222222222222',me:{...unpaid,access:{active:true}},url:'https://kingdrama.test/assistir/drama-a/3'});

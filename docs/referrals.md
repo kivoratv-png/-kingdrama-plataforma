@@ -14,7 +14,7 @@ Depois de implementar e autenticar o webhook, o servidor deverá:
 
 1. Verificar o evento com o mecanismo oficial da Lowify e, quando disponível, consultar a transação na API.
 2. Validar status aprovado, produto, valor, moeda e vínculo da compra com a conta cadastrada. QR gerado, comprovante e parâmetros da URL nunca são confirmação.
-3. Registrar a assinatura paga do comprador, com `provider='lowify'` e `provider_ref` igual ao ID do pagamento aprovado. Definir os períodos mensal/semestral/anual com as regras de calendário acertadas na integração.
+3. Registrar a assinatura paga do comprador, com `provider='lowify'` e `provider_ref` igual ao ID do pagamento aprovado. Os produtos atuais são semanal (7 dias), mensal (1 mês), trimestral (3 meses) e semestral (6 meses), conforme `public/config/ofertas.json`. Aplicar as regras de calendário na integração.
 4. Registrar `payment_confirmed_at` com a data real de aprovação, quando disponível. Não chamar uma função de recompensa separada: o banco processa a indicação automaticamente ao inserir ou atualizar a assinatura ativa por pagamento Lowify.
 5. Atualizar o estado do comprador e do indicador na interface.
 

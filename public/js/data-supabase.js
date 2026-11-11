@@ -349,7 +349,10 @@
       });
     }
 
-    if (metodo === 'GET' && p === '/api/me') return json(200, await montaMe());
+    if (metodo === 'GET' && p === '/api/me') {
+      if (url.searchParams.get('atualizar') === '1') invalida('sessao');
+      return json(200, await montaMe());
+    }
 
     // ---- Vitrine da página de visitante (sem login)
     if (metodo === 'GET' && p === '/api/showcase') {

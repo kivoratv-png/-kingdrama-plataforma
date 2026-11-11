@@ -517,9 +517,40 @@ a.chip:hover { color: var(--text); border-color: var(--line-strong); }
 .offers-page .settings-section { display:grid;gap:16px;min-width:0; }
 .offers-page h2 { font-size:20px;line-height:1.35;margin:0; }
 .offers-page p { margin:0;color:var(--muted);line-height:1.6; }
-.offer-icon svg { width:32px;height:32px;color:var(--gold); }
 .offers-grid { display:grid;grid-template-columns:minmax(0,1fr);gap:16px; }
-.offers-placeholder { padding:24px 18px;border:1px dashed var(--line-strong);border-radius:var(--radius);display:grid;gap:12px; }
+.offers-heading,.offers-page { max-width:1280px; }
+.offers-heading .eyebrow { display:block;color:var(--gold);margin-bottom:12px; }
+.offer-card { display:flex;flex-direction:column;min-width:0;padding:22px 18px;border:1px solid var(--line-strong);border-radius:var(--radius);background:linear-gradient(160deg,#211b24,#141217); }
+.offer-card-featured { border-color:var(--gold);background:linear-gradient(160deg,#30251f,#191318); }
+.offer-card-unavailable { background:#17161b; }
+.offer-card-top { display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:28px;margin-bottom:18px; }
+.offer-duration { color:var(--gold);font-size:13px;font-weight:700; }
+.offer-availability { padding:4px 8px;border:1px solid var(--line-strong);border-radius:20px;font-size:11px;color:var(--muted); }
+.offers-page .offer-tagline { font-size:13px;margin-top:6px; }
+.offer-price { display:flex;flex-direction:column;gap:4px;margin:24px 0 18px; }
+.offer-price strong { font-size:clamp(30px,7vw,38px);line-height:1.15;letter-spacing:-1px; }
+.offer-price strong.offer-price-pending { font-size:25px;letter-spacing:0; }
+.offer-price span { font-size:12px;color:var(--muted); }
+.offers-page .offer-description { font-size:14px; }
+.offer-benefits { list-style:none;padding:0;margin:22px 0 26px;display:grid;gap:14px;font-size:14px;line-height:1.5; }
+.offer-benefits li { display:flex;gap:9px;min-width:0; }
+.offer-benefits svg { flex:0 0 18px;width:18px;height:18px;color:var(--gold);margin-top:2px; }
+.offer-benefits span { min-width:0;overflow-wrap:anywhere; }
+.offer-card .btn-block { width:100%;margin-top:auto; }
+.offer-card button:disabled { opacity:.65;cursor:not-allowed; }
+.offers-page .offer-checkout-note { margin-top:10px;font-size:11px;text-align:center; }
+.offer-help { display:grid;gap:20px;padding:22px 18px;border:1px solid var(--line-strong);border-radius:var(--radius);min-width:0; }
+.offer-help p { margin-top:12px; }
+.offer-account-email { overflow-wrap:anywhere; }
+.offer-help-actions { display:flex;flex-direction:column;justify-content:center;gap:14px;min-width:0; }
+.offer-help-actions .link { text-align:center;font-size:13px;overflow-wrap:anywhere; }
+.offer-help [data-offer-feedback] { grid-column:1/-1; }
+.offer-help [data-offer-feedback]:empty { display:none; }
+.offer-active { display:flex;flex-direction:column;gap:16px;padding:18px;border:1px solid var(--gold);border-radius:var(--radius); }
+.offer-active>div { display:flex;gap:12px;align-items:center;min-width:0; }
+.offer-active>div>svg { flex:0 0 24px;color:var(--gold); }
+.offer-active strong,.offer-active span { display:block; }
+.offers-back { align-self:flex-start; }
 .offers-page .btn { min-height:48px;white-space:normal;text-align:center; }
 .referral-page .settings-section { display:grid;gap:16px;min-width:0; }
 .referral-page h2 { font-size:20px;line-height:1.35;margin:0; }
@@ -536,7 +567,9 @@ a.chip:hover { color: var(--text); border-color: var(--line-strong); }
 .referral-stats dd { font-size:30px;line-height:1;margin:0;font-weight:700;color:var(--gold-light);overflow-wrap:anywhere; }
 .referral-steps { padding-left:22px;margin:0;display:grid;gap:12px; }
 @media(max-width:380px) { .referral-copy { flex-direction:column; } .referral-copy button { width:100%; } }
-@media(min-width:900px) { .offers-grid { grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); } }
+@media(min-width:640px) { .offers-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(min-width:1000px) { .offer-help { grid-template-columns:minmax(0,1fr) minmax(240px,320px);padding:28px; } .offer-active { flex-direction:row;align-items:center;justify-content:space-between; } }
+@media(min-width:1200px) { .offers-grid { grid-template-columns:repeat(4,minmax(0,1fr)); } }
 .request-page .settings-section { display:grid;gap:16px;min-width:0; }
 .request-page h2,.request-page h3 { margin:0;font-size:18px;overflow-wrap:anywhere; }
 .request-page .hint { line-height:1.6; }
