@@ -1,6 +1,6 @@
 begin;
 do $$
-declare name text;r jsonb;
+declare name text;r jsonb;current_setup public.admin_console_credentials%rowtype;
 begin
  if exists(select 1 from public.admin_accounts) then raise exception 'Platform accounts remain associated'; end if;
  foreach name in array array['admin_console_credentials','admin_console_sessions'] loop
@@ -10,6 +10,12 @@ begin
   if has_function_privilege('authenticated','public.'||name,'EXECUTE') or has_function_privilege('anon','public.'||name,'EXECUTE') then raise exception 'App role can access console: %',name; end if;
  end loop;
  perform set_config('request.jwt.claims','{"role":"service_role"}',true);
+ select * into current_setup from public.admin_console_credentials where id=1;
+ if not current_setup.active and current_setup.pending_expires>now() then
+  if not public.admin_console_commit_login(floor(extract(epoch from now())/30)::bigint,repeat('7',64),repeat('8',64),current_setup.bootstrap_hash,current_setup.totp_secret) then raise exception 'Pending setup cannot commit'; end if;
+ end if;
+ update public.admin_console_credentials set active=false,username='setup-test',password_hash='test',totp_secret='setup-secret',last_counter=-1,failures=0,blocked_until=null,bootstrap_hash=repeat('e',64),bootstrap_expires=now()+interval '1 hour',pending_expires=now()+interval '20 minutes' where id=1;
+ if not public.admin_console_commit_login(99,repeat('c',64),repeat('d',64),repeat('e',64),'setup-secret') then raise exception 'Initial setup commit failed'; end if;
  update public.admin_console_credentials set active=true,username='test-console',password_hash='test',totp_secret='test-secret',last_counter=-1,failures=0,blocked_until=null where id=1;
  if not public.admin_console_attempt() then raise exception 'First attempt blocked'; end if;
  if not public.admin_console_commit_login(100,repeat('a',64),repeat('b',64),null,'test-secret') then raise exception 'Login commit failed'; end if;

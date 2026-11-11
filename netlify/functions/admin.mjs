@@ -13,16 +13,21 @@ export default async function admin(request){
  const base=env('SUPABASE_URL'),key=env('SUPABASE_SERVICE_ROLE_KEY');
  if(!base||!key)return reply(503,{error:'Painel temporariamente indisponível.'});
  const encryption=consoleEncryptionKey(key);
+ let stage='request';
  const call=async(path,method='POST',body)=>{
   const response=await fetch(base+path,{method,headers:{apikey:key,Authorization:`Bearer ${key}`,'Content-Type':'application/json',Prefer:'return=representation'},body:body===undefined?undefined:JSON.stringify(body),redirect:'error',signal:AbortSignal.timeout(15000)});
-  if(!response.ok)throw Error('Database unavailable');return response.status===204?null:response.json();
+  if(!response.ok){const failure=await response.json().catch(()=>({}));throw Object.assign(Error('Database unavailable'),{dbCode:failure.code||String(response.status)});}return response.status===204?null:response.json();
  };
  const rpc=(name,body={})=>call('/rest/v1/rpc/'+name,'POST',body);
  try{
   let body={};if(request.method==='POST'){const raw=await request.text();if(raw.length>8192)return reply(400,{error:'Pedido inválido.'});try{body=JSON.parse(raw);}catch{return reply(400,{error:'Pedido inválido.'});}}
   const action=body.action;
   if(request.method==='GET'&&url.searchParams.get('view')==='status'){
-   const rows=await call('/rest/v1/admin_console_credentials?select=active&id=eq.1','GET');return reply(200,{configured:rows[0]?.active===true});
+   const rows=await call('/rest/v1/admin_console_credentials?select=active&id=eq.1','GET');
+   stage='crypto_health';
+   const sample='GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
+   const cryptoReady=verifyTotp(sample,'287082',59000)===1&&randomToken().length===43&&decryptSecret(encryptSecret(sample,encryption),encryption)===sample;
+   return reply(200,{configured:rows[0]?.active===true,cryptoReady});
   }
   if(action==='logout'){
    const value=cookieValue(request);if(/^[\w-]{43}$/.test(value))await rpc('admin_console_revoke',{p_cookie:digest(value)});
@@ -44,11 +49,15 @@ export default async function admin(request){
    if(action==='login'){
     if(typeof body.username!=='string'||body.username.length>40||typeof body.password!=='string'||body.password.length>128||!record.active||!equal(body.username.toLowerCase(),record.username||'')||!await passwordMatches(body.password,record.password_hash))return reply(401,{error:'Usuário, senha ou código inválido.'});
    }else if(!record.pending_expires||Date.parse(record.pending_expires)<=Date.now()||!record.password_hash||!record.totp_secret)return reply(400,{error:'Recomece a configuração do autenticador.'});
+   stage='authenticator';
    const counter=verifyTotp(decryptSecret(record.totp_secret,encryption),String(body.code||''));
    if(counter===null)return reply(401,{error:setup?'Código inválido. Confira o aplicativo autenticador.':'Usuário, senha ou código inválido.'});
+   stage='session_token';
    const browser=randomToken(),pageToken=randomToken();
+   stage='session_commit';
    const committed=await rpc('admin_console_commit_login',{p_counter:counter,p_cookie:digest(browser),p_page:digest(pageToken),p_setup:setup?digest(body.token):null,p_secret:record.totp_secret});
    if(!committed)return reply(401,{error:'Código já usado ou expirado. Aguarde o próximo código do autenticador.'});
+   stage='session_response';
    return reply(200,{pageToken},cookie(browser));
   }
   // App JWTs and account cookies never authenticate this boundary.
@@ -70,6 +79,6 @@ export default async function admin(request){
    await rpc('admin_console_set_request_addon',{p_user:body.user,p_until:body.until});return reply(200,{ok:true});
   }
   return reply(400,{error:'Ação inválida.'});
- }catch{return reply(503,{error:'Painel temporariamente indisponível. Tente novamente.'});}
+ }catch(error){console.error(JSON.stringify({event:'admin_console_failure',stage,code:error.dbCode||error.code||error.name}));return reply(503,{error:'Painel temporariamente indisponível. Tente novamente.',reference:stage});}
 }
 export const config={rateLimit:{windowLimit:90,windowSize:60,aggregateBy:'ip',action:'rate_limit'}};
