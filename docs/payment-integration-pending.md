@@ -1,5 +1,11 @@
 # Ativação automática — pré-requisitos pendentes
 
+Receptor publicado para cadastro na Lowify: `https://appkingdrama.netlify.app/.netlify/functions/lowify-webhook`.
+
+Está em modo de descoberta, sem ativação automática. GET informa esse estado; POST aceita JSON ou formulário, persiste apenas a estrutura anonimizada e nomes de cabeçalhos relacionados à autenticação em uma tabela privada e confirma recebimento com HTTP 200. Não guarda e-mails, telefones, valores ou segredos. Limite de 32 KB por envio e 40 estruturas distintas; estruturas antigas são removidas após sete dias na próxima captura. Nenhum evento recebido nesse modo comprova pagamento e não há reprocessamento automático posterior: os testes/vendas precisam ser reenviados após a integração autenticada ser habilitada.
+
+Próximo passo: cadastrar a URL, enviar o teste da Lowify e confirmar o método oficial de autenticação. Não publicar este modo como liberação de planos concluída.
+
 Os cards Lowify já têm os IDs e períodos corretos em `public/config/ofertas.json`: g18z8v semanal (7 dias), P3QfUF mensal (1 mês), ZPO7Gw trimestral (3 meses), LD4imo semestral (6 meses).
 
 A integração de pagamento ainda não está ativa. Não há chaves Stripe/Lowify na configuração local nem uma conexão Stripe confirmada nesta sessão. O conector Stripe foi localizado e oferecido ao proprietário, mas não deve ser tratado como conectado até confirmação. Também falta saber se a Stripe terá checkout independente ou será somente processadora da Lowify, para evitar dupla ativação da mesma compra.
