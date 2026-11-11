@@ -1,4 +1,4 @@
-import { api, esc, icon } from './lib.js?v=48397e6a9d1c';
+import { api, esc, icon } from './lib.js?v=b202261b30d2';
 
 export function categoryLinks(categories, currentPath = '') {
   return `<a class="category-option" href="/inicio">${icon.home}<span>Início</span></a>${categories.map((category,index)=>{

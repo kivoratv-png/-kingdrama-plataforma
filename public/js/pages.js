@@ -1,8 +1,8 @@
-import { api, esc, icon, card, row, enhance, toast, smallCover, initials } from './lib.js?v=48397e6a9d1c';
-import { state } from './app.js?v=48397e6a9d1c';
-import { accountBanner, mountAccountBanner } from './account-banner.js?v=48397e6a9d1c';
-import { categoryLinks } from './category-menu.js?v=48397e6a9d1c';
-import { loadPlayerControl, mountPlayerButton } from './player-button.js?v=48397e6a9d1c';
+import { api, esc, icon, card, row, enhance, toast, smallCover, initials } from './lib.js?v=b202261b30d2';
+import { state } from './app.js?v=b202261b30d2';
+import { accountBanner, mountAccountBanner } from './account-banner.js?v=b202261b30d2';
+import { categoryLinks } from './category-menu.js?v=b202261b30d2';
+import { loadPlayerControl, mountPlayerButton } from './player-button.js?v=b202261b30d2';
 
 const statusLabel = { active: 'Ativo', pending: 'Pendente', canceled: 'Cancelado', refunded: 'Reembolsado', expired: 'Expirado', chargeback: 'Contestado' };
 export const statusBadge = (s) => `<span class="status-badge ${s === 'active' ? 'status-active' : s === 'pending' ? 'status-pending' : 'status-other'}">${esc(statusLabel[s] || s)}</span>`;
@@ -474,7 +474,7 @@ let hlsLib;
 function loadHls() {
   if (window.Hls) return Promise.resolve(window.Hls);
   hlsLib ||= new Promise((resolve, reject) => {
-    const s = Object.assign(document.createElement('script'), { src: '/vendor/hls.min.js?v=48397e6a9d1c', async: true });
+    const s = Object.assign(document.createElement('script'), { src: '/vendor/hls.min.js?v=b202261b30d2', async: true });
     s.onload = () => resolve(window.Hls);
     s.onerror = () => { hlsLib = null; reject(new Error('hls.js indisponível')); };
     document.head.append(s);

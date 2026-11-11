@@ -1,4 +1,4 @@
-import { api, esc, icon, initials, toast } from './lib.js?v=48397e6a9d1c';
+import { api, esc, icon, initials, toast } from './lib.js?v=b202261b30d2';
 
 const date = value => value ? new Date(value).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' }) : 'Não informado';
 const statuses = { active:'Ativa', pending:'Pendente', canceled:'Cancelada', refunded:'Reembolsada', expired:'Expirada', chargeback:'Contestada' };
@@ -9,7 +9,10 @@ const deviceName = agent => {
 };
 const passwordField = (name, label, autocomplete) => `<div class="field"><label for="${name}">${label}</label><input class="input" type="password" id="${name}" name="${name}" required autocomplete="${autocomplete}" ${autocomplete==='new-password'?'minlength="8" maxlength="128"':'maxlength="1024"'}></div>`;
 
-export function profile(ctx) {
+export async function profile(ctx) {
+  const latest=await api('/api/me?atualizar=1');
+  if(!latest.user)throw Object.assign(new Error('Entre na sua conta para acessar o perfil.'),{status:401});
+  ctx.state.me=latest;
   const { user, access } = ctx.state.me;
   const expired = access.periodEnd && new Date(access.periodEnd) <= new Date();
   const status = expired && access.status === 'active' ? 'expired' : access.status;
@@ -18,7 +21,7 @@ export function profile(ctx) {
     <section class="profile-card"><span class="avatar lg">${esc(initials(user))}</span><div class="who"><strong>${esc(user.name || 'Minha conta')}</strong><span>${esc(user.email)}</span></div></section>
     <section class="profile-card settings-section" aria-labelledby="subscription-heading">
       <div class="settings-heading"><h2 id="subscription-heading">Minha assinatura</h2><span class="status-badge ${access.active?'status-active':'status-other'}">${esc(statuses[status] || 'Sem assinatura')}</span></div>
-      <dl class="account-facts"><div><dt>Plano</dt><dd>${esc(access.planCode || 'Ainda não contratado')}</dd></div><div><dt>${expired?'Expirou em':'Vencimento'}</dt><dd>${access.periodEnd?esc(date(access.periodEnd)):access.active?'Sem data de expiração':'Sem assinatura ativa'}</dd></div><div><dt>Conta criada em</dt><dd>${esc(date(user.createdAt))}</dd></div></dl>
+      <dl class="account-facts"><div><dt>Plano</dt><dd>${esc(({weekly:'Semanal',monthly:'Mensal',quarterly:'Trimestral',semiannual:'Semestral',cortesia:'Cortesia'})[access.planCode] || access.planCode || 'Ainda não contratado')}</dd></div><div><dt>${expired?'Expirou em':'Expira em'}</dt><dd>${access.periodEnd?esc(date(access.periodEnd)):access.active?'Sem data de expiração':'Sem assinatura ativa'}</dd></div><div><dt>Conta criada em</dt><dd>${esc(date(user.createdAt))}</dd></div></dl>
       ${access.active?'':'<a class="btn btn-primary" href="/ofertas">Ver ofertas de assinatura</a>'}
     </section>
     <section class="profile-card settings-section referral-promo"><h2>Indique e ganhe dias grátis</h2><p class="hint">A cada amigo que pagar pelo seu link, você ganha 10 dias.</p><a class="btn btn-primary" href="/indicacoes">${icon.gift} ${access.active?'Ver minhas indicações':'Conhecer o benefício'}</a>${access.active?'':'<p class="hint">Geração de link exclusiva para assinantes com acesso ativo.</p>'}</section>
