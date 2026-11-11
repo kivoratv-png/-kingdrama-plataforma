@@ -1,7 +1,7 @@
-import { api, esc, icon, card, row, enhance, toast, smallCover, initials } from './lib.js?v=87c96eb4393b';
-import { state } from './app.js?v=87c96eb4393b';
-import { accountBanner, mountAccountBanner } from './account-banner.js?v=87c96eb4393b';
-import { categoryLinks } from './category-menu.js?v=87c96eb4393b';
+import { api, esc, icon, card, row, enhance, toast, smallCover, initials } from './lib.js?v=6eb997326891';
+import { state } from './app.js?v=6eb997326891';
+import { accountBanner, mountAccountBanner } from './account-banner.js?v=6eb997326891';
+import { categoryLinks } from './category-menu.js?v=6eb997326891';
 
 const statusLabel = { active: 'Ativo', pending: 'Pendente', canceled: 'Cancelado', refunded: 'Reembolsado', expired: 'Expirado', chargeback: 'Contestado' };
 export const statusBadge = (s) => `<span class="status-badge ${s === 'active' ? 'status-active' : s === 'pending' ? 'status-pending' : 'status-other'}">${esc(statusLabel[s] || s)}</span>`;
@@ -468,7 +468,7 @@ let hlsLib;
 function loadHls() {
   if (window.Hls) return Promise.resolve(window.Hls);
   hlsLib ||= new Promise((resolve, reject) => {
-    const s = Object.assign(document.createElement('script'), { src: '/vendor/hls.min.js?v=87c96eb4393b', async: true });
+    const s = Object.assign(document.createElement('script'), { src: '/vendor/hls.min.js?v=6eb997326891', async: true });
     s.onload = () => resolve(window.Hls);
     s.onerror = () => { hlsLib = null; reject(new Error('hls.js indisponível')); };
     document.head.append(s);

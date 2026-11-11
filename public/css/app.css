@@ -255,8 +255,9 @@ a.chip:hover { color: var(--text); border-color: var(--line-strong); }
 .promo-slides { border-radius:18px;box-shadow:0 8px 30px rgba(179,18,31,.13); }
 .promo-slide { position:relative;display:flex;align-items:center;gap:22px;min-width:0;min-height:224px;padding:22px 20px;border:1px solid rgba(255,255,255,.14);border-radius:18px;color:#fff5ed;background:linear-gradient(110deg,#621321,#aa2431 62%,#784321);touch-action:pan-y; }
 .promo-slide[hidden] { display:none; }
-.promo-support { background:linear-gradient(110deg,#351a18,#6b3029 62%,#735024); }
-.promo-referral { background:linear-gradient(110deg,#731c32,#9b2837 55%,#815323); }
+.promo-request { background:linear-gradient(110deg,#3b1464,#6b2796 58%,#812c9b); }
+.promo-support { background:linear-gradient(110deg,#064e3b,#08734b 58%,#12663b); }
+.promo-referral { background:linear-gradient(110deg,#701326,#aa1d31 58%,#b82b22); }
 .promo-copy { min-width:0;position:relative;flex:1; }
 .promo-eyebrow { color:#ffe6c2;font-size:10px;font-weight:700;letter-spacing:.14em; }
 .promo-copy h2 { margin:7px 0;font-size:22px;line-height:1.2;letter-spacing:-.02em;text-wrap:balance; }

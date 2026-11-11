@@ -1,4 +1,4 @@
-import { api,esc,icon } from './lib.js?v=87c96eb4393b';
+import { api,esc,icon } from './lib.js?v=6eb997326891';
 
 export async function referrals() {
   const data=await api('/api/referrals');

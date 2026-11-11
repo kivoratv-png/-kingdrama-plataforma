@@ -1,15 +1,15 @@
 // Roteador, estado da sessão e layout.
-import { api, esc, icon, initials, enhance } from './lib.js?v=87c96eb4393b';
-import * as pages from './pages.js?v=87c96eb4393b';
-import * as authPages from './auth-pages.js?v=87c96eb4393b';
-import { dashboard } from './admin.js?v=87c96eb4393b';
-import { clearActivity, sendActivity } from './activity.js?v=87c96eb4393b';
-import { privacy } from './privacy.js?v=87c96eb4393b';
-import { profile } from './profile.js?v=87c96eb4393b';
-import { requests } from './requests.js?v=87c96eb4393b';
-import { offers, offerPath } from './offers.js?v=87c96eb4393b';
-import { referrals } from './referrals.js?v=87c96eb4393b';
-import { mountCategoryMenu } from './category-menu.js?v=87c96eb4393b';
+import { api, esc, icon, initials, enhance } from './lib.js?v=6eb997326891';
+import * as pages from './pages.js?v=6eb997326891';
+import * as authPages from './auth-pages.js?v=6eb997326891';
+import { dashboard } from './admin.js?v=6eb997326891';
+import { clearActivity, sendActivity } from './activity.js?v=6eb997326891';
+import { privacy } from './privacy.js?v=6eb997326891';
+import { profile } from './profile.js?v=6eb997326891';
+import { requests } from './requests.js?v=6eb997326891';
+import { offers, offerPath } from './offers.js?v=6eb997326891';
+import { referrals } from './referrals.js?v=6eb997326891';
+import { mountCategoryMenu } from './category-menu.js?v=6eb997326891';
 
 export const state = { me: null, site: null };
 const app = document.getElementById('app');
