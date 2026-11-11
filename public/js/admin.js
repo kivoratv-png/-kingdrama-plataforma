@@ -23,12 +23,12 @@ const emptyRow = (columns, message) => `<tr><td colspan="${columns}" class="adm-
 
 function activityRows(rows) {
   return rows.map((user) => `<tr>
-    <td><div class="adm-user">${userName(user)}</div></td>
-    <td><span class="adm-state ${user.player_state === 'error' ? 'is-error' : ''}">${esc(stateName[user.player_state] || 'Navegando')}</span>${user.page_visible ? '' : '<small>Em segundo plano</small>'}</td>
-    <td>${user.title_name ? `<strong>${esc(user.title_name)}</strong><small>Episódio ${esc(user.episode_number)}</small>` : '—'}</td>
-    <td><a class="adm-path" href="${esc(user.path)}" target="_blank" rel="noopener noreferrer">${esc(user.path)}</a></td>
-    <td>${user.position_seconds == null ? '—' : `${Math.floor(user.position_seconds / 60)}:${String(user.position_seconds % 60).padStart(2, '0')}`}</td>
-    <td class="adm-time">${esc(dateTime(user.last_seen))}</td>
+    <td data-label="Usuário"><div class="adm-user">${userName(user)}</div></td>
+    <td data-label="Estado"><span class="adm-state ${user.player_state === 'error' ? 'is-error' : ''}">${esc(stateName[user.player_state] || 'Navegando')}</span>${user.page_visible ? '' : '<small>Em segundo plano</small>'}</td>
+    <td data-label="Título">${user.title_name ? `<strong>${esc(user.title_name)}</strong><small>Episódio ${esc(user.episode_number)}</small>` : '—'}</td>
+    <td data-label="Página acessada"><a class="adm-path" href="${esc(user.path)}" target="_blank" rel="noopener noreferrer">${esc(user.path)}</a></td>
+    <td data-label="Posição">${user.position_seconds == null ? '—' : `${Math.floor(user.position_seconds / 60)}:${String(user.position_seconds % 60).padStart(2, '0')}`}</td>
+    <td data-label="Último sinal" class="adm-time">${esc(dateTime(user.last_seen))}</td>
   </tr>`).join('') || emptyRow(6, 'Nenhum usuário conectado nos últimos 90 segundos.');
 }
 
@@ -36,10 +36,10 @@ function usersRows(rows) {
   return rows.map((user) => {
     const sub = user.subscription;
     const label = user.has_access ? 'Ativo' : sub?.status === 'active' ? 'Expirado' : subscriptionName[sub?.status] || 'Sem assinatura';
-    return `<tr><td><div class="adm-user">${userName(user)}</div></td>
-      <td><span class="adm-state ${user.has_access ? '' : 'is-muted'}">${esc(label)}</span></td>
-      <td>${esc(sub?.plan || '—')}</td><td>${sub ? sub.ends_at ? esc(dateTime(sub.ends_at)) : 'Sem prazo definido' : '—'}</td>
-      <td class="adm-time">${esc(dateTime(user.created_at))}</td><td class="adm-time">${esc(dateTime(user.last_sign_in_at))}</td></tr>`;
+    return `<tr><td data-label="Usuário"><div class="adm-user">${userName(user)}</div></td>
+      <td data-label="Acesso"><span class="adm-state ${user.has_access ? '' : 'is-muted'}">${esc(label)}</span></td>
+      <td data-label="Plano">${esc(sub?.plan || '—')}</td><td data-label="Vencimento">${sub ? sub.ends_at ? esc(dateTime(sub.ends_at)) : 'Sem prazo definido' : '—'}</td>
+      <td data-label="Cadastro" class="adm-time">${esc(dateTime(user.created_at))}</td><td data-label="Último login" class="adm-time">${esc(dateTime(user.last_sign_in_at))}</td></tr>`;
   }).join('') || emptyRow(6, 'Nenhum usuário encontrado.');
 }
 
@@ -78,9 +78,9 @@ dashboard.mount = (root, ctx) => {
       content.querySelector('[data-online]').innerHTML = activityRows(data.online);
       content.querySelector('[data-users]').innerHTML = usersRows(data.users);
       content.querySelector('[data-errors]').innerHTML = data.errors.map((item) => `<tr>
-        <td><div class="adm-user">${userName(item)}</div></td><td>${esc(item.title_name || '—')}</td>
-        <td>${esc(item.last_error_code)}</td><td class="adm-path">${esc(item.path)}</td>
-        <td class="adm-time">${esc(dateTime(item.error_at))}</td></tr>`).join('') || emptyRow(5, 'Nenhum erro comunicado nas últimas 24 horas.');
+        <td data-label="Usuário"><div class="adm-user">${userName(item)}</div></td><td data-label="Título">${esc(item.title_name || '—')}</td>
+        <td data-label="Erro">${esc(item.last_error_code)}</td><td data-label="Página" class="adm-path">${esc(item.path)}</td>
+        <td data-label="Horário" class="adm-time">${esc(dateTime(item.error_at))}</td></tr>`).join('') || emptyRow(5, 'Nenhum erro comunicado nas últimas 24 horas.');
       content.querySelector('[data-updated]').textContent = `Atualizado em ${dateTime(data.generated_at)}`;
       const pages = Math.max(1, Math.ceil(data.users_total / data.page_size));
       content.querySelector('[data-pagination]').textContent = `${data.users_total} usuários · página ${page + 1} de ${pages}`;

@@ -1,4 +1,5 @@
 .adm-shell {
+  min-width: 0;
   max-width: 1480px;
   margin: 0 auto;
   padding: 32px 28px 64px;
@@ -90,6 +91,7 @@
 }
 
 .adm-section {
+  min-width: 0;
   margin: 22px 0;
   padding: 22px;
   background: #141013;
@@ -291,6 +293,11 @@
   color:var(--muted)
 }
 
+.adm-gate form .btn {
+  white-space: normal;
+  padding: 12px 16px;
+}
+
 .adm-gate input {
   text-align: center;
   letter-spacing: 8px;
@@ -323,18 +330,23 @@
 
 @media(max-width:600px) {
   .adm-shell {
-    padding:22px 14px 40px
+    padding: max(22px, env(safe-area-inset-top, 0px))
+      max(14px, env(safe-area-inset-right, 0px))
+      max(40px, env(safe-area-inset-bottom, 0px))
+      max(14px, env(safe-area-inset-left, 0px));
   }
   .adm-header {
     align-items: flex-start;
-    gap:12px
+    flex-direction: column;
+    gap: 12px;
   }
   .adm-header h1 {
     font-size:26px
   }
   .adm-security {
-    font-size: 11px;
-    max-width:150px
+    font-size: 12px;
+    max-width: none;
+    text-align: left;
   }
   .adm-stats {
     grid-template-columns: repeat(2,minmax(0,1fr));
@@ -344,7 +356,8 @@
     padding:16px
   }
   .adm-stat strong {
-    font-size:30px
+    font-size: clamp(24px, 7vw, 30px);
+    overflow-wrap: anywhere;
   }
   .adm-stat:last-child {
     grid-column:span 2
@@ -353,11 +366,20 @@
     padding:16px
   }
   .adm-toolbar {
-    align-items:flex-start
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
   }
   .adm-pagination {
     align-items: flex-start;
-    flex-direction:column
+    flex-direction: column;
+  }
+  .adm-pagination > div {
+    width: 100%;
+  }
+  .adm-pagination .btn {
+    flex: 1;
+    min-width: 0;
   }
   .adm-gate {
     padding: 24px 18px;
@@ -365,6 +387,66 @@
   }
   .adm-toolbar .btn {
     padding: 10px 12px;
-    font-size:12px
+    font-size: 14px;
+  }
+  .adm-section-head form {
+    width: 100%;
+    flex-direction: column;
+  }
+  .adm-section-head form .btn {
+    width: 100%;
+  }
+  .adm-section table,
+  .adm-section tbody {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+  .adm-section thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .adm-section tbody {
+    display: grid;
+    gap: 14px;
+  }
+  .adm-section tbody tr {
+    display: block;
+    padding: 6px 12px;
+    border: 1px solid #3b2b33;
+    border-radius: 10px;
+    background: #1b1519;
+  }
+  .adm-section td,
+  .adm-section tbody tr:last-child td {
+    display: block;
+    width: 100%;
+    max-width: none;
+    padding: 10px 0;
+    border-bottom: 1px solid #30252b;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+  .adm-section tbody tr td:last-child {
+    border-bottom: 0;
+  }
+  .adm-section td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 5px;
+    color: var(--muted);
+    font: 500 11px/1.4 var(--font);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .adm-section .adm-path {
+    max-width: none;
+  }
+  .adm-section .adm-empty {
+    padding: 20px 0 !important;
   }
 }
