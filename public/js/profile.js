@@ -32,7 +32,7 @@ export function profile(ctx) {
       <button class="btn btn-ghost" type="submit">Alterar senha</button><p class="hint" data-feedback role="status"></p>
     </form>
     <section class="profile-card settings-section" aria-labelledby="devices-heading"><div class="settings-heading"><h2 id="devices-heading">Dispositivos conectados</h2><button class="btn btn-ghost" type="button" data-refresh-devices>Atualizar</button></div>
-      <p class="hint">O plano básico permite 1 dispositivo conectado. Para usar outro, desconecte o anterior. Cada navegador com login conta como um dispositivo.</p>
+      <p class="hint">O plano básico permite 1 dispositivo conectado. Ao entrar em outro dispositivo, o acesso anterior é encerrado. Cada navegador com login conta como um dispositivo.</p>
       <div data-devices aria-live="polite">Carregando dispositivos…</div>
     </section>
     <nav class="list-links" aria-label="Conta"><a href="/politica-de-privacidade">${icon.lock} Política de Privacidade ${icon.chev}</a><button type="button" data-logout>${icon.logout} Sair da conta</button></nav>

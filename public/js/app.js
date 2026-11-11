@@ -6,12 +6,15 @@ import { dashboard } from './admin.js';
 import { clearActivity, sendActivity } from './activity.js';
 import { privacy } from './privacy.js';
 import { profile } from './profile.js';
+import { requests } from './requests.js';
 
 export const state = { me: null, site: null };
 const app = document.getElementById('app');
 
 // guard: 'public' (qualquer um) | 'guest' (só visitante) | 'user' (logado) | 'active' (acesso liberado)
 const routes = [
+  { re: /^\/pedidos$/, guard: 'user', page: requests, tab: 'pedidos' },
+  { re: /^\/entrar-com-codigo$/, guard: 'guest', page: authPages.codeLogin, bare: true },
   { re: /^\/politica-de-privacidade$/, guard: 'public', page: privacy, bare: true },
   { re: /^\/admin$/, guard: 'user', page: dashboard, bare: true },
   { re: /^\/$/, guard: 'root' },
@@ -157,6 +160,7 @@ function shell(html, route) {
       <a href="/categorias" ${cur('categorias')}>Categorias</a>
       <a href="/minha-lista" ${cur('lista')}>Minha lista</a>
       <a href="/perfil" ${cur('perfil')}>Perfil</a>
+      ${u?.isAdmin?'':`<a href="/pedidos" ${cur('pedidos')}>Pedidos</a>`}
     </nav>
     <div class="spacer"></div>
     <form class="top-search" role="search" action="/buscar">
@@ -172,17 +176,19 @@ function shell(html, route) {
         <a role="menuitem" href="/minha-lista">${icon.heart} Minha lista</a>
         <a role="menuitem" href="/historico">${icon.clock} Histórico</a>
         <a role="menuitem" href="/perfil">${icon.user} Perfil e assinatura</a>
+        ${u?.isAdmin?'':`<a role="menuitem" href="/pedidos">${icon.request} Meus pedidos</a>`}
         <a role="menuitem" href="/perfil">${icon.lock} Excluir conta</a>
         <button role="menuitem" type="button" class="danger" data-logout>${icon.logout} Sair</button>
       </div>
     </div>
   </header>
   <main id="main" tabindex="-1">${html}</main>
-  <nav class="tabbar" aria-label="Navegação">
+  <nav class="tabbar ${u?.isAdmin?'':'with-requests'}" aria-label="Navegação">
     <a href="/inicio" ${cur('inicio')}>${icon.home}<span>Início</span></a>
     <a href="/buscar" ${cur('buscar')}>${icon.search}<span>Buscar</span></a>
     <a href="/categorias" ${cur('categorias')}>${icon.grid}<span>Categorias</span></a>
     <a href="/minha-lista" ${cur('lista')}>${icon.heart}<span>Minha lista</span></a>
+    ${u?.isAdmin?'':`<a href="/pedidos" ${cur('pedidos')}>${icon.request}<span>Pedidos</span></a>`}
     <a href="/perfil" ${cur('perfil')}>${icon.user}<span>Perfil</span></a>
   </nav>`;
   enhance(app);

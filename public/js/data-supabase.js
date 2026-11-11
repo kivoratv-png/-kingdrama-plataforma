@@ -33,6 +33,7 @@
     if (/Invalid login credentials/i.test(m)) return 'E-mail ou senha incorretos.';
     if (/Email not confirmed/i.test(m)) return 'Confirme seu e-mail antes de entrar.';
     if (/User already registered/i.test(m)) return 'Já existe uma conta com este e-mail. Tente entrar.';
+    if (/Database error saving new user/i.test(m)) return 'Não foi possível cadastrar estes dados. Se este WhatsApp já possui uma conta, entre nela ou fale com o suporte.';
     if (/Password should be at least/i.test(m)) return 'A senha precisa ter pelo menos 6 caracteres.';
     if (/rate limit|too many/i.test(m)) return 'Muitas tentativas. Espere um minuto e tente de novo.';
     if (/Unable to validate email/i.test(m)) return 'Informe um e-mail válido.';
@@ -114,17 +115,31 @@
     return data?.session?.user || null;
   }
 
+  let activatedSession = null;
+  async function activateSession() {
+    const { data } = await sb.auth.getSession();
+    const token = data?.session?.access_token;
+    if (!token) { activatedSession = null; return; }
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if (activatedSession === payload.session_id) return;
+    const { error } = await sb.rpc('account_activate_session');
+    if (error) throw new Error('Não foi possível liberar este dispositivo. Entre novamente.');
+    activatedSession = payload.session_id;
+  }
+
   // Perfil + assinatura: pedido por toda página protegida, muda muito pouco.
   const montaMe = () => comCache('sessao', TTL.sessao, montaMeAgora);
 
   async function montaMeAgora() {
     const user = await usuarioAtual();
     if (!user) return { user: null };
+    await activateSession();
 
-    const [{ data: perfil }, { data: assinatura }] = await Promise.all([
+    const [{ data: perfil }, { data: assinatura }, { data: isAdmin }] = await Promise.all([
       sb.from('profiles').select('name, created_at').eq('id', user.id).maybeSingle(),
       sb.from('subscriptions').select('status, plan, ends_at, updated_at')
         .eq('user_id', user.id).order('updated_at', { ascending: false }).limit(1).maybeSingle(),
+      sb.rpc('platform_admin_status'),
     ]);
 
     const ativa = Boolean(
@@ -138,6 +153,7 @@
         email: user.email,
         name: perfil?.name || user.user_metadata?.name || null,
         createdAt: perfil?.created_at || user.created_at,
+        isAdmin: isAdmin === true,
       },
       access: {
         status: assinatura?.status || 'pending',
@@ -157,7 +173,8 @@
     }
     if (precisaAcesso) {
       const { data: allowed, error } = await sb.rpc('account_session_allowed');
-      if (error || !allowed) return { erro: json(403, { error: 'Limite de dispositivos atingido. Acesse Perfil para desconectar outro dispositivo.', code: 'device_limit' }), me };
+      if (error) return { erro: json(503, { error: 'Não foi possível validar este dispositivo. Tente novamente.' }), me };
+      if (!allowed) return { erro: json(403, { error: 'Sua conta foi aberta em outro dispositivo. Entre novamente para usar este celular.', code: 'device_limit' }), me };
     }
     return { erro: null, me };
   }
@@ -252,6 +269,32 @@
     const p = url.pathname;
     let m;
 
+    if (p === '/api/requests' && ['GET','POST'].includes(metodo)) {
+      const { erro } = await exigeLogin(false); if (erro) return erro;
+      const { data, error } = metodo === 'GET' ? await sb.rpc('customer_requests')
+        : await sb.rpc('submit_drama_request', { p_name: String(corpo.name || ''), p_notes: String(corpo.notes || '') });
+      if (error) return json(400, { error: error.message || 'Não foi possível concluir o pedido.' });
+      return json(200, metodo === 'GET' ? data : { id: data });
+    }
+
+    if (p === '/api/auth/otp' && metodo === 'POST') {
+      const configResponse = await fetchOriginal('/config/auth.json', { cache: 'no-store' });
+      const config = configResponse.ok ? await configResponse.json() : {};
+      if (!config.emailCodeEnabled) return json(503, { error: 'O acesso por código está temporariamente indisponível. Entre com e-mail ou WhatsApp e sua senha.' });
+      const email = String(corpo.email || '').trim().toLowerCase();
+      if (!/^\S+@\S+\.\S{2,}$/.test(email)) return json(400, { error: 'Informe seu e-mail cadastrado.' });
+      const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+      if (error && !/signups not allowed|user not found/i.test(error.message)) return json(400, { error: /email address not authorized|sending emails/i.test(error.message) ? 'O envio de códigos está temporariamente indisponível. Entre com sua senha.' : traduzErro(error) });
+      return json(200, { ok: true });
+    }
+    if (p === '/api/auth/verify-code' && metodo === 'POST') {
+      const email = String(corpo.email || '').trim().toLowerCase(), token = String(corpo.code || '').trim();
+      if (!/^\d{6,10}$/.test(token)) return json(400, { error: 'Digite o código recebido por e-mail.' });
+      const { error } = await sb.auth.verifyOtp({ email, token, type: 'email' });
+      if (error) return json(400, { error: 'Código inválido ou expirado. Confira o e-mail ou solicite outro código.' });
+      invalida(); await activateSession(); return json(200, { ok: true });
+    }
+
     if (p === '/api/account' && metodo === 'POST') {
       const { data } = await sb.auth.getSession();
       if (!data?.session?.access_token) return json(401, { error: 'Entre na sua conta.' });
@@ -303,14 +346,19 @@
       const email = String(corpo.email || '').trim().toLowerCase();
       const senha = String(corpo.password || '');
       if (corpo.acceptTerms !== true) return json(400, { error: 'Aceite os termos para criar a conta.' });
+      const name = limpaNome(corpo.name), whatsapp = String(corpo.whatsapp || '').replace(/\D/g, '');
+      if (!name || name.split(' ').length < 2) return json(400, { error: 'Informe seu nome completo.' });
+      if (!/^[1-9][0-9]{9,10}$/.test(whatsapp)) return json(400, { error: 'Informe seu WhatsApp com DDD (10 ou 11 números).' });
+      if (senha !== corpo.confirmPassword) return json(400, { error: 'As senhas precisam ser iguais.' });
       if (senha.length < 8) return json(400, { error: 'A senha precisa ter pelo menos 8 caracteres.' });
       const { data, error } = await sb.auth.signUp({
         email, password: senha,
-        options: { data: { name: limpaNome(corpo.name) } },
+        options: { data: { name, whatsapp } },
       });
       if (error) return json(400, { error: traduzErro(error) });
       // Sem sessão = o projeto está exigindo confirmação de e-mail.
-      if (!data.session) return json(200, { ok: true, needsEmailConfirm: true });
+      if (!data.session) return json(400, { error: 'Não foi possível entrar automaticamente. Tente entrar com seu e-mail e senha.' });
+      invalida(); await activateSession();
       return json(200, { ok: true });
     }
 
@@ -319,8 +367,17 @@
       const email = String(corpo.email || '').trim().toLowerCase();
       const senha = String(corpo.password || '');
       if (!senha) return json(400, { error: 'Digite sua senha.' });
-      const { error } = await sb.auth.signInWithPassword({ email, password: senha });
+      let error;
+      if (email.includes('@')) ({ error } = await sb.auth.signInWithPassword({ email, password: senha }));
+      else {
+        if (!/^[1-9][0-9]{9,10}$/.test(email)) return json(400, { error: 'Digite o WhatsApp com DDD, somente números, ou seu e-mail.' });
+        const response = await fetchOriginal('/.netlify/functions/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ whatsapp: email, password: senha }) });
+        const result = await response.json();
+        if (!response.ok) return json(response.status, result);
+        ({ error } = await sb.auth.setSession(result));
+      }
       if (error) return json(401, { error: traduzErro(error) });
+      invalida(); await activateSession();
       return json(200, { ok: true });
     }
 

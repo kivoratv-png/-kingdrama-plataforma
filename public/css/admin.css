@@ -450,3 +450,9 @@
     padding: 20px 0 !important;
   }
 }
+.adm-request { padding:18px; border:1px solid var(--line); border-radius:14px; min-width:0; overflow-wrap:anywhere; }
+.adm-request h3 { margin:0; font-size:18px; }
+.adm-request .input { width:100%; min-width:0; max-width:100%; font-size:16px; }
+.adm-request .field { display:grid; gap:8px; min-width:0; }
+.adm-request .btn { min-height:44px; white-space:normal; }
+.adm-request textarea { resize:vertical; }

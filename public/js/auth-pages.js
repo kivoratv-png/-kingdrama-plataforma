@@ -17,37 +17,63 @@ export function login() {
   return frame(`<div data-card>
     <span class="eyebrow">Bem-vindo de volta</span>
     <h1>Entrar no KingDrama</h1>
-    <p class="lead">Entre com o e-mail e a senha da sua conta.</p>
+    <p class="lead">Entre com e-mail ou WhatsApp e sua senha.</p>
     <div data-msg></div>
     <form data-email novalidate>
-      <div class="field"><label for="email">E-mail</label>
-        <input class="input" id="email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" required placeholder="voce@email.com"></div>
+      <div class="field"><label for="email">E-mail ou WhatsApp</label>
+        <input class="input" id="email" name="email" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" required placeholder="11999999999 ou email@..." aria-describedby="login-hint"><span class="hint" id="login-hint">WhatsApp: use com DDD (somente números). E-mail: digite normal com @.</span></div>
       <div class="field"><label for="password">Senha</label>
         <input class="input" id="password" name="password" type="password" autocomplete="current-password" required placeholder="Sua senha">
         <span class="hint"><a class="link" href="/recuperar">Esqueci minha senha</a></span></div>
       <button class="btn btn-primary btn-block" type="submit">${icon.lock} Entrar</button>
     </form>
+    <a class="btn btn-ghost btn-block" href="/entrar-com-codigo" style="margin-top:12px">${icon.mail} Entrar sem senha (código por e-mail)</a>
     <p class="foot">Ainda não tem conta? <a class="link" href="/cadastro">Criar conta</a></p>
   </div>`);
 }
 login.mount = (root, ctx) => mountEmailForm(root, ctx, 'login');
+
+export async function codeLogin() {
+  const response=await fetch('/config/auth.json',{cache:'no-store'});
+  const config=response.ok?await response.json():{};
+  return frame(`<span class="eyebrow">Entrar sem senha</span><h1>Código por e-mail</h1><p class="lead">Informe o e-mail cadastrado para receber um código de acesso.</p>${config.emailCodeEnabled?'':'<div class="alert alert-info">O acesso por código está temporariamente indisponível. Entre com sua senha enquanto preparamos esta opção.</div>'}<div data-msg role="status"></div>
+    <form data-send-code><div class="field"><label for="code-email">E-mail cadastrado</label><input class="input" id="code-email" name="email" type="email" autocomplete="email" inputmode="email" required placeholder="seuemail@gmail.com"></div><button class="btn btn-primary btn-block" type="submit">Enviar código</button></form>
+    <form data-verify-code hidden><div class="field"><label for="email-code">Código recebido por e-mail</label><input class="input" id="email-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" minlength="6" maxlength="10" required placeholder="Digite o código"></div><button class="btn btn-primary btn-block" type="submit">Confirmar e entrar</button><button class="btn btn-ghost btn-block" type="button" data-resend style="margin-top:12px">Reenviar código</button></form>
+    <p class="foot"><a class="link" href="/entrar">Voltar para entrar com senha</a></p>`);
+}
+codeLogin.mount = (root,ctx) => {
+  const send=root.querySelector('[data-send-code]'),verify=root.querySelector('[data-verify-code]'),msg=root.querySelector('[data-msg]');
+  if(!send || !verify)return;
+  let email='',nextSend=0;
+  const sendCode=async()=>{
+    const now=Date.now(); if(now<nextSend)throw new Error(`Aguarde ${Math.ceil((nextSend-now)/1000)} segundos para reenviar.`);
+    await api('/api/auth/otp',{method:'POST',body:{email}});nextSend=Date.now()+60000;
+    send.hidden=true;verify.hidden=false;msg.textContent='Se houver uma conta com este e-mail, você receberá um código. Confira também o spam.';verify.elements.code.focus();
+  };
+  const run=async(form,fn)=>{const button=form.querySelector('button');button.disabled=true;msg.textContent='Aguarde…';try{await fn();}catch(e){msg.textContent=e.message;}finally{button.disabled=false;}};
+  send.addEventListener('submit',e=>{e.preventDefault();email=send.elements.email.value.trim().toLowerCase();run(send,sendCode);});
+  verify.addEventListener('submit',e=>{e.preventDefault();run(verify,async()=>{await api('/api/auth/verify-code',{method:'POST',body:{email,code:verify.elements.code.value.trim()}});verify.reset();await ctx.refreshMe();ctx.navigate(afterLoginPath(),{replace:true});});});
+  root.querySelector('[data-resend]').addEventListener('click',e=>{const button=e.currentTarget;button.disabled=true;sendCode().catch(error=>{msg.textContent=error.message;}).finally(()=>{button.disabled=false;});});
+};
 
 // ------------------------------------------------------------ Cadastro
 export function signup() {
   return frame(`<div data-card>
     <span class="eyebrow">Nova conta</span>
     <h1>Criar sua conta</h1>
-    <p class="lead">Leva menos de um minuto. Depois de criar a conta, você segue para o pagamento.</p>
+    <p class="lead">Preencha seus dados para entrar na plataforma, sem precisar confirmar o e-mail.</p>
     <div data-msg></div>
     <form data-email novalidate>
-      <div class="field"><label for="name">Nome <span style="color:var(--faint);font-weight:400">(opcional)</span></label>
-        <input class="input" id="name" name="name" autocomplete="name" maxlength="60" placeholder="Como quer ser chamado(a)"></div>
+      <div class="field"><label for="name">Nome completo</label>
+        <input class="input" id="name" name="name" autocomplete="name" required maxlength="60" placeholder="Ex: Maria Almeida"></div>
       <div class="field"><label for="email">E-mail</label>
-        <input class="input" id="email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" required placeholder="voce@email.com"></div>
+        <input class="input" id="email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" required placeholder="seuemail@gmail.com"></div>
+      <div class="field"><label for="whatsapp">WhatsApp (DDD)</label><input class="input" id="whatsapp" name="whatsapp" type="tel" inputmode="tel" autocomplete="tel-national" required maxlength="16" placeholder="(11) 99999-9999"><span class="hint">Usamos seu WhatsApp apenas para avisos e promoções.</span></div>
       <div class="field"><label for="password">Senha</label>
-        <input class="input" id="password" name="password" type="password" autocomplete="new-password" required minlength="8" placeholder="Pelo menos 8 caracteres" aria-describedby="senha-dica">
+        <input class="input" id="password" name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="128" placeholder="Digite sua senha" aria-describedby="senha-dica">
         <span class="hint" id="senha-dica">Use 8 caracteres ou mais. Evite uma senha que você já usa em outro site.</span></div>
-      <label class="check"><input type="checkbox" name="terms" required> <span>Li e aceito os termos de uso e a política de privacidade.</span></label>
+      <div class="field"><label for="confirmPassword">Confirmar senha</label><input class="input" id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" required minlength="8" maxlength="128" placeholder="Repita sua senha"></div>
+      <label class="check"><input type="checkbox" name="terms" required> <span>Li e aceito os termos de uso e a <a class="link" href="/politica-de-privacidade">política de privacidade</a>.</span></label>
       <button class="btn btn-primary btn-block" type="submit">Criar conta</button>
     </form>
     <p class="foot">Já tem conta? <a class="link" href="/entrar">Entrar</a></p>
@@ -68,10 +94,15 @@ function mountEmailForm(root, ctx, mode) {
       const senha = form.elements.password.value;
       const name = form.elements.namedItem('name')?.value.trim() || undefined;
 
-      if (!/^\S+@\S+\.\S{2,}$/.test(email)) { erro('Informe um e-mail válido.'); form.email.focus(); return; }
+      if (mode === 'signup' || email.includes('@')) {
+        if (!/^\S+@\S+\.\S{2,}$/.test(email)) { erro('Informe um e-mail válido.'); form.email.focus(); return; }
+      } else if (!/^[1-9][0-9]{9,10}$/.test(email)) { erro('Informe o WhatsApp com DDD, somente números, ou seu e-mail.'); form.email.focus(); return; }
       if (!senha) { erro('Digite sua senha.'); form.password.focus(); return; }
       if (mode === 'signup' && senha.length < 8) { erro('A senha precisa ter pelo menos 8 caracteres.'); form.password.focus(); return; }
       if (mode === 'signup' && !form.elements.terms.checked) { erro('Aceite os termos para continuar.'); return; }
+      if (mode === 'signup' && (!name || name.split(/\s+/).length < 2)) { erro('Informe seu nome completo.'); return; }
+      if (mode === 'signup' && !/^[1-9][0-9]{9,10}$/.test(form.elements.whatsapp.value.replace(/\D/g,''))) { erro('Informe seu WhatsApp com DDD (10 ou 11 números).'); return; }
+      if (mode === 'signup' && senha !== form.elements.confirmPassword.value) { erro('As senhas precisam ser iguais.'); return; }
 
       const btn = form.querySelector('button[type=submit]');
       const rotuloBtn = btn.innerHTML;
@@ -81,14 +112,7 @@ function mountEmailForm(root, ctx, mode) {
 
       try {
         if (mode === 'signup') {
-          const r = await api('/api/auth/signup', { method: 'POST', body: { email, password: senha, name, acceptTerms: true } });
-          if (r.needsEmailConfirm) {
-            card.innerHTML = `<span class="eyebrow">Quase lá</span>
-              <h1>Confirme seu e-mail</h1>
-              <p class="lead">Enviamos um link para <span class="email-pill">${esc(email)}</span>. Abra o link e depois volte para entrar.</p>
-              <a class="btn btn-primary btn-block" href="/entrar">Já confirmei — entrar</a>`;
-            return;
-          }
+          await api('/api/auth/signup', { method: 'POST', body: { email, password: senha, confirmPassword: form.elements.confirmPassword.value, whatsapp: form.elements.whatsapp.value, name, acceptTerms: true } });
         } else {
           await api('/api/auth/login', { method: 'POST', body: { email, password: senha } });
         }
@@ -201,7 +225,7 @@ export async function pending(ctx) {
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px">
       <span style="color:var(--muted);font-size:14px;overflow-wrap:anywhere">${esc(me.user.email)}</span>${statusBadge(s)}</div>
     <ol class="steps">
-      <li class="done"><span class="n">${icon.check}</span><div><strong>Conta criada</strong>E-mail confirmado.</div></li>
+      <li class="done"><span class="n">${icon.check}</span><div><strong>Conta criada</strong>Cadastro concluído.</div></li>
       <li class="current"><span class="n">2</span><div><strong>Pagamento</strong>Conclua no checkout seguro.</div></li>
       <li><span class="n">3</span><div><strong>Acesso liberado</strong>Automático após a confirmação.</div></li>
     </ol>
@@ -210,6 +234,7 @@ export async function pending(ctx) {
       ? `<button class="btn btn-primary btn-block" type="button" data-checkout>${icon.card} Ir para o pagamento</button>`
       : '<div class="alert alert-info">O pagamento ainda não está disponível. Volte em breve.</div>'}
     <button class="btn btn-ghost btn-block" type="button" data-check style="margin-top:10px">${icon.refresh} Já paguei — verificar</button>
+    <p class="foot"><a class="link" href="/perfil">Meu perfil</a> · <a class="link" href="/pedidos">Meus pedidos de doramas</a></p>
     <p class="foot">Pagou com outro e-mail? O acesso é liberado para o e-mail informado no pagamento — entre com ele.</p>`, logoutBtn);
 }
 pending.mount = (root, ctx) => {

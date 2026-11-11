@@ -1,4 +1,5 @@
 import { esc } from './lib.js';
+import { mountAdminRequests } from './admin-requests.js';
 
 const client = window.__KD_SB__;
 let status;
@@ -128,7 +129,9 @@ dashboard.mount = (root, ctx) => {
         <p class="adm-note">Último erro de reprodução comunicado por cada aba. Erros exibidos dentro do iframe da Bunny podem exigir consulta aos logs da Bunny.</p>
         <div class="adm-table-wrap"><table><thead><tr><th>Usuário</th><th>Título</th><th>Erro</th><th>Página</th><th>Horário</th></tr></thead><tbody data-errors></tbody></table></div>
       </section>
+      <section class="adm-section"><div class="adm-section-head"><h2>Pedidos de doramas</h2><span>Área exclusiva da administração</span></div><div data-admin-requests></div></section>
     </div>`;
+    mountAdminRequests(content.querySelector('[data-admin-requests]'));
     content.querySelector('[data-refresh]').addEventListener('click', load);
     content.querySelector('[data-user-search]').addEventListener('submit', (event) => {
       event.preventDefault();
