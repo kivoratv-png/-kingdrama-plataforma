@@ -23,6 +23,13 @@ function buildMatcher(titles){
       const candidates=value && indexes[method].get(value);
       if(candidates?.length===1)return {title:candidates[0],method};
     }
+    // Browser captures can prefix the real title with "Assistindo".
+    // Accept only a unique exact catalog name after removing that prefix.
+    const capturedName=String(video.title || '').replace(/^assistindo\s+/i,'');
+    if(capturedName!==video.title){
+      const candidates=indexes.name.get(name(capturedName));
+      if(candidates?.length===1)return {title:candidates[0],method:'capture-exact-name'};
+    }
     return null;
   };
 }

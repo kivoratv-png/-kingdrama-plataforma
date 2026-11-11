@@ -10,3 +10,9 @@ test('resolves only the explicitly verified truncated catalog filename',()=>{
 test('selects the longest ready re-upload, breaking ties by upload date',()=>{
  const old={length:100,dateUploaded:'2026-01-01'};assert.equal(betterVideo({length:101,dateUploaded:'2025-01-01'},old),true);assert.equal(betterVideo({length:100,dateUploaded:'2026-02-01'},old),true);assert.equal(betterVideo({length:99,dateUploaded:'2026-03-01'},old),false);
 });
+test('matches captured titles only when removing Assistindo yields a unique exact name',()=>{
+ const title={id:'voce-foi-substituido-primeiro-amor-1788633165',name:'Você Foi Substituído, Primeiro Amor'};
+ assert.equal(buildMatcher([title])({title:'Assistindo Você Foi Substituído, Primeiro Amor.ts'}).title.id,title.id);
+ assert.equal(buildMatcher([title,{...title,id:'another'}])({title:'Assistindo Você Foi Substituído, Primeiro Amor.ts'}),null);
+ assert.equal(buildMatcher([title])({title:'Assistindo Você Foi Substituído.ts'}),null);
+});
