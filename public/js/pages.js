@@ -1,5 +1,5 @@
-import { api, esc, icon, card, row, enhance, toast, smallCover, initials } from './lib.js?v=7e9548d5f437';
-import { state } from './app.js?v=7e9548d5f437';
+import { api, esc, icon, card, row, enhance, toast, smallCover, initials } from './lib.js?v=254d4d7fded2';
+import { state } from './app.js?v=254d4d7fded2';
 
 const statusLabel = { active: 'Ativo', pending: 'Pendente', canceled: 'Cancelado', refunded: 'Reembolsado', expired: 'Expirado', chargeback: 'Contestado' };
 export const statusBadge = (s) => `<span class="status-badge ${s === 'active' ? 'status-active' : s === 'pending' ? 'status-pending' : 'status-other'}">${esc(statusLabel[s] || s)}</span>`;
@@ -57,7 +57,7 @@ function heroFeature(list, site) {
           <h2 data-f="name">${esc(t.name)}</h2>
           <div class="feature-actions">
             <a class="btn btn-light" data-f="link" href="/titulo/${esc(t.id)}">${icon.info} Ver detalhes</a>
-            <button class="btn btn-ghost" type="button" data-f="fav" data-id="${esc(t.id)}">${icon.heart} Minha lista</button>
+            <button class="btn btn-ghost" type="button" data-f="fav" data-id="${esc(t.id)}">${icon.heart} Favoritos</button>
           </div>
           <div class="feature-thumbs" role="tablist" aria-label="Escolher destaque">
             ${list.map((x, i) => `<button type="button" role="tab" data-i="${i}" aria-current="${i === 0}" aria-label="${esc(x.name)}"><img src="${esc(smallCover(x.cover))}" alt="" loading="lazy"></button>`).join('')}
@@ -223,7 +223,7 @@ home.mount = (root) => {
   hero.querySelector('[data-f="fav"]').addEventListener('click', async (e) => {
     const id = e.currentTarget.dataset.id;
     await api(`/api/favorites/${encodeURIComponent(id)}`, { method: 'PUT' });
-    toast('Adicionado à Minha lista');
+    toast('Adicionado aos Favoritos');
   });
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) restart();
 };
@@ -285,7 +285,7 @@ export async function categories() {
   }
   return `<div class="page-head"><h1>Categorias</h1><p>Escolha um tema e encontre sua próxima série.</p></div>
     <div class="cat-grid">${cats.map((c) => `<a class="cat-tile" href="/categoria/${esc(c.id)}">
-      ${c.cover ? `<img src="${esc(smallCover(c.cover))}" alt="" loading="lazy">` : ''}
+      ${(c.covers?.length || c.cover) ? `<div class="cat-art" aria-hidden="true">${(c.covers?.length ? c.covers : [c.cover]).slice(0,3).map((cover,i) => `<img class="cat-poster cat-poster-${i+1}" src="${esc(smallCover(cover))}" alt="" width="360" height="480" loading="lazy" decoding="async">`).join('')}</div>` : ''}
       <strong>${esc(c.name)}</strong><span>${c.count} títulos</span></a>`).join('')}</div>`;
 }
 
@@ -321,7 +321,7 @@ export async function title(ctx) {
         <div class="detail-actions">
           <a class="btn btn-primary" href="/assistir/${esc(t.id)}/${hasEps ? t.episodes[0].number : 1}">${icon.play} Assistir</a>
           <button class="btn btn-ghost ${t.favorite ? 'is-on' : ''}" type="button" data-fav aria-pressed="${t.favorite}">
-            ${t.favorite ? icon.heartFill : icon.heart}<span>${t.favorite ? 'Na minha lista' : 'Minha lista'}</span>
+            ${t.favorite ? icon.heartFill : icon.heart}<span>${t.favorite ? 'Nos Favoritos' : 'Favoritos'}</span>
           </button>
         </div>
       </div>
@@ -344,8 +344,8 @@ title.mount = (root) => {
       await api(`/api/favorites/${encodeURIComponent(t.id)}`, { method: on ? 'PUT' : 'DELETE' });
       btn.setAttribute('aria-pressed', String(on));
       btn.classList.toggle('is-on', on);
-      btn.innerHTML = `${on ? icon.heartFill : icon.heart}<span>${on ? 'Na minha lista' : 'Minha lista'}</span>`;
-      toast(on ? 'Adicionado à Minha lista' : 'Removido da Minha lista');
+      btn.innerHTML = `${on ? icon.heartFill : icon.heart}<span>${on ? 'Nos Favoritos' : 'Favoritos'}</span>`;
+      toast(on ? 'Adicionado aos Favoritos' : 'Removido dos Favoritos');
     } catch (e) { toast(e.message); } finally { btn.disabled = false; }
   });
 };
@@ -462,7 +462,7 @@ let hlsLib;
 function loadHls() {
   if (window.Hls) return Promise.resolve(window.Hls);
   hlsLib ||= new Promise((resolve, reject) => {
-    const s = Object.assign(document.createElement('script'), { src: '/vendor/hls.min.js?v=7e9548d5f437', async: true });
+    const s = Object.assign(document.createElement('script'), { src: '/vendor/hls.min.js?v=254d4d7fded2', async: true });
     s.onload = () => resolve(window.Hls);
     s.onerror = () => { hlsLib = null; reject(new Error('hls.js indisponível')); };
     document.head.append(s);
@@ -470,12 +470,12 @@ function loadHls() {
   return hlsLib;
 }
 
-// ============================================================ Minha lista / Histórico
+// ============================================================ Favoritos / Histórico
 export async function favorites() {
   const { titles } = await api('/api/favorites');
-  return `<div class="page-head"><h1>Minha lista</h1><p>Títulos que você salvou para assistir depois.</p></div>
+  return `<div class="page-head"><h1>Favoritos</h1><p>Títulos que você salvou para assistir depois.</p></div>
     ${titles.length ? `<p class="count-line">${titles.length} título${titles.length > 1 ? 's' : ''}</p><div class="grid">${titles.map((t) => card(t, { favorite: true })).join('')}</div>`
-      : `<div class="wrap"><div class="empty">${icon.heart}<strong>Sua lista está vazia</strong><p>Toque em “Minha lista” na página de um título para salvá-lo aqui.</p><a class="btn btn-primary" href="/inicio">Explorar o catálogo</a></div></div>`}`;
+      : `<div class="wrap"><div class="empty">${icon.heart}<strong>Você ainda não tem favoritos</strong><p>Toque em “Favoritos” na página de um título para salvá-lo aqui.</p><a class="btn btn-primary" href="/inicio">Explorar o catálogo</a></div></div>`}`;
 }
 
 export async function watchHistory() {

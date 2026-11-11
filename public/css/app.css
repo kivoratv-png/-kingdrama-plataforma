@@ -327,13 +327,17 @@ a.chip:hover { color: var(--text); border-color: var(--line-strong); }
 .cat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 8px var(--gutter) 0; max-width: 1680px; margin-inline: auto; }
 @media (min-width: 600px) { .cat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; } }
 @media (min-width: 900px) { .cat-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); } }
-.cat-tile { position: relative; overflow: hidden; border-radius: var(--radius); min-height: 96px; padding: 14px; display: flex; flex-direction: column; justify-content: flex-end; background: var(--surface); border: 1px solid var(--line); isolation: isolate; }
-.cat-tile img { position: absolute; right: -12px; top: 8px; width: 46%; aspect-ratio: 3 / 4; object-fit: contain; border-radius: 8px; transform: rotate(8deg); z-index: -1; opacity: .75; box-shadow: var(--shadow); transition: transform .3s; }
-.cat-tile::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, var(--surface) 35%, rgba(26, 16, 16, .4)), var(--grad-soft); }
-.cat-tile strong { font-size: 15px; line-height: 1.2; max-width: 70%; overflow-wrap: anywhere; }
-.cat-tile span { font-size: 12px; color: var(--muted); }
-.cat-tile:hover img { transform: rotate(4deg) scale(1.04); }
-@media (min-width: 900px) { .cat-tile { min-height: 130px; padding: 18px; } .cat-tile strong { font-size: 18px; } }
+.cat-tile { position: relative; overflow: hidden; border-radius: var(--radius); min-height: 154px; padding: 14px; display: flex; flex-direction: column; justify-content: flex-end; gap:6px; background: var(--surface); border: 1px solid var(--line); isolation: isolate; }
+.cat-art { position:absolute;inset:0;z-index:-2;pointer-events:none; }
+.cat-art img { position:absolute;top:-10%;width:60%;height:125%;object-fit:cover;object-position:center 20%;border-radius:8px;box-shadow:var(--shadow); }
+.cat-poster-1 { right:-4%;transform:rotate(10deg);z-index:3; }
+.cat-poster-2 { right:38%;transform:rotate(-9deg);z-index:2; }
+.cat-poster-3 { right:77%;transform:rotate(-16deg);z-index:1; }
+.cat-tile::before { content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(0deg,rgba(10,6,6,.98),rgba(10,6,6,.82) 32%,rgba(10,6,6,.08) 90%); }
+.cat-tile strong { font-size:15px;line-height:1.25;overflow-wrap:anywhere;text-shadow:0 2px 8px #000; }
+.cat-tile span { font-size:12px;color:var(--muted); }
+.cat-tile:hover { border-color:var(--gold); }
+@media (min-width:900px) { .cat-tile { min-height:190px;padding:18px; } .cat-tile strong { font-size:18px; } }
 
 /* Filtros em pílulas (rolagem horizontal própria) */
 .pills { display: flex; gap: 8px; overflow-x: auto; padding: 4px var(--gutter) 10px; scrollbar-width: none; max-width: 1680px; margin-inline: auto; }

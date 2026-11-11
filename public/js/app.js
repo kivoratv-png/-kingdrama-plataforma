@@ -1,13 +1,13 @@
 // Roteador, estado da sessão e layout.
-import { api, esc, icon, initials, enhance } from './lib.js?v=7e9548d5f437';
-import * as pages from './pages.js?v=7e9548d5f437';
-import * as authPages from './auth-pages.js?v=7e9548d5f437';
-import { dashboard } from './admin.js?v=7e9548d5f437';
-import { clearActivity, sendActivity } from './activity.js?v=7e9548d5f437';
-import { privacy } from './privacy.js?v=7e9548d5f437';
-import { profile } from './profile.js?v=7e9548d5f437';
-import { requests } from './requests.js?v=7e9548d5f437';
-import { offers, offerPath } from './offers.js?v=7e9548d5f437';
+import { api, esc, icon, initials, enhance } from './lib.js?v=254d4d7fded2';
+import * as pages from './pages.js?v=254d4d7fded2';
+import * as authPages from './auth-pages.js?v=254d4d7fded2';
+import { dashboard } from './admin.js?v=254d4d7fded2';
+import { clearActivity, sendActivity } from './activity.js?v=254d4d7fded2';
+import { privacy } from './privacy.js?v=254d4d7fded2';
+import { profile } from './profile.js?v=254d4d7fded2';
+import { requests } from './requests.js?v=254d4d7fded2';
+import { offers, offerPath } from './offers.js?v=254d4d7fded2';
 
 export const state = { me: null, site: null };
 const app = document.getElementById('app');
@@ -26,7 +26,7 @@ const routes = [
   { re: /^\/categoria\/([\w-]+)$/, guard: 'user', page: pages.category, tab: 'categorias' },
   { re: /^\/titulo\/([\w-]+)$/, guard: 'user', page: pages.title, overHero: true },
   { re: /^\/assistir\/([\w-]+)\/(\d+)$/, guard: 'active', page: pages.player, bare: true },
-  { re: /^\/minha-lista$/, guard: 'user', page: pages.favorites, tab: 'lista' },
+  { re: /^\/(?:favoritos|minha-lista)$/, guard: 'user', page: pages.favorites, tab: 'lista' },
   { re: /^\/em-breve$/, guard: 'user', page: pages.comingSoon },
   { re: /^\/historico$/, guard: 'user', page: pages.watchHistory, tab: 'perfil' },
   { re: /^\/perfil$/, guard: 'user', page: profile, tab: 'perfil' },
@@ -161,7 +161,7 @@ function shell(html, route) {
     <nav class="topnav" aria-label="Principal">
       <a href="/inicio" ${cur('inicio')}>Início</a>
       <a href="/categorias" ${cur('categorias')}>Categorias</a>
-      <a href="/minha-lista" ${cur('lista')}>Minha lista</a>
+      <a href="/favoritos" ${cur('lista')}>Favoritos</a>
       ${u?.isAdmin?'':`<a href="/pedidos" ${cur('pedidos')}>Pedir doramas</a>`}
     </nav>
     <div class="spacer"></div>
@@ -175,7 +175,7 @@ function shell(html, route) {
       </button>
       <div class="menu-pop" role="menu">
         <div class="who"><strong>${esc(u?.name || 'Minha conta')}</strong><span>${esc(u?.email || '')}</span></div>
-        <a role="menuitem" href="/minha-lista">${icon.heart} Minha lista</a>
+        <a role="menuitem" href="/favoritos">${icon.heart} Favoritos</a>
         <a role="menuitem" href="/historico">${icon.clock} Histórico</a>
         <a role="menuitem" href="/perfil">${icon.user} Perfil e assinatura</a>
         ${u?.isAdmin?'':`<a role="menuitem" href="/pedidos">${icon.request} Pedir doramas / Meus pedidos</a>`}
@@ -189,7 +189,7 @@ function shell(html, route) {
     <a href="/inicio" ${cur('inicio')}>${icon.home}<span>Início</span></a>
     <a href="/buscar" ${cur('buscar')}>${icon.search}<span>Buscar</span></a>
     <a href="/categorias" ${cur('categorias')}>${icon.grid}<span>Categorias</span></a>
-    <a href="/minha-lista" ${cur('lista')}>${icon.heart}<span>Minha lista</span></a>
+    <a href="/favoritos" ${cur('lista')}>${icon.heart}<span>Favoritos</span></a>
     ${u?.isAdmin?'':`<a href="/pedidos" ${cur('pedidos')}>${icon.request}<span>Pedir doramas</span></a>`}
     <a href="/perfil" ${cur('perfil')}>${icon.user}<span>Perfil</span></a>
   </nav>`;

@@ -100,6 +100,11 @@ export function enhance(root) {
 // Capa que falhar ao carregar: troca para a versão grande e, se falhar de novo, mostra o nome.
 document.addEventListener('error', (e) => {
   const img = e.target;
+  if (img instanceof HTMLImageElement && img.closest('.cat-art')) {
+    if (!img.dataset.retried && img.src.includes('-sm.webp')) { img.dataset.retried = '1'; img.src = img.src.replace('-sm.webp','.webp'); }
+    else img.remove();
+    return;
+  }
   if (!(img instanceof HTMLImageElement) || !img.closest('.card-cover, .feature-poster, .detail-poster')) return;
   if (!img.dataset.retried && img.src.includes('-sm.webp')) {
     img.dataset.retried = '1';

@@ -5,7 +5,7 @@
 // /api/*, então app.js, pages.js e auth-pages.js não precisam saber que o banco
 // mudou — eles só conhecem esses endereços.
 //
-// O que é real agora: conta, senha, sessão, catálogo, minha lista e progresso.
+// O que é real agora: conta, senha, sessão, catálogo, favoritos e progresso.
 // O que ainda não é: o vídeo. A URL da Bunny precisa ser assinada no servidor
 // (ver /api/play no fim do arquivo).
 // ============================================================================
@@ -208,17 +208,9 @@
   const listaCategorias = () => comCache('catalogo:categorias', TTL.catalogo, consultaCategorias);
 
   async function consultaCategorias() {
-    const [{ data: cats, error: e1 }, { data: vinculos, error: e2 }] = await Promise.all([
-      sb.from('categories').select('id, name, position').order('position').order('name'),
-      sb.from('title_categories').select('category_id, title_id'),
-    ]);
-    if (e1) throw e1;
-    if (e2) throw e2;
-    const contagem = new Map();
-    for (const v of vinculos || []) contagem.set(v.category_id, (contagem.get(v.category_id) || 0) + 1);
-    return (cats || [])
-      .map((c) => ({ id: c.id, name: c.name, count: contagem.get(c.id) || 0, cover: null }))
-      .filter((c) => c.count > 0);
+    const { data, error } = await sb.rpc('catalog_categories');
+    if (error) throw error;
+    return (data || []).map(c => ({ ...c, count: Number(c.count), cover: c.covers?.[0] || null }));
   }
 
   const idsFavoritos = () => comCache('usuario:favoritos', TTL.usuario, async () => {
@@ -446,7 +438,7 @@
       if (destaques.length) rows.push({ id: 'destaques', title: 'Em destaque', titles: destaques.map(paraCard) });
       if (favs.length) {
         const lista = favs.map((id) => porId.get(id)).filter(Boolean);
-        if (lista.length) rows.push({ id: 'minha-lista', title: 'Minha lista', link: '/minha-lista', titles: lista.slice(0, 30).map(paraCard) });
+        if (lista.length) rows.push({ id: 'favoritos', title: 'Favoritos', link: '/favoritos', titles: lista.slice(0, 30).map(paraCard) });
       }
       for (const c of cats) {
         const lista = titulos.filter((t) => t.categories.includes(c.id)).slice(0, 20);
