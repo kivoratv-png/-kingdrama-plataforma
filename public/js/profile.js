@@ -1,4 +1,4 @@
-import { api, esc, icon, initials, toast } from './lib.js?v=254d4d7fded2';
+import { api, esc, icon, initials, toast } from './lib.js?v=a55dbb2fcdc5';
 
 const date = value => value ? new Date(value).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' }) : 'Não informado';
 const statuses = { active:'Ativa', pending:'Pendente', canceled:'Cancelada', refunded:'Reembolsada', expired:'Expirada', chargeback:'Contestada' };
@@ -21,6 +21,7 @@ export function profile(ctx) {
       <dl class="account-facts"><div><dt>Plano</dt><dd>${esc(access.planCode || 'Ainda não contratado')}</dd></div><div><dt>${expired?'Expirou em':'Vencimento'}</dt><dd>${access.periodEnd?esc(date(access.periodEnd)):access.active?'Sem data de expiração':'Sem assinatura ativa'}</dd></div><div><dt>Conta criada em</dt><dd>${esc(date(user.createdAt))}</dd></div></dl>
       ${access.active?'':'<a class="btn btn-primary" href="/ofertas">Ver ofertas de assinatura</a>'}
     </section>
+    <section class="profile-card settings-section referral-promo"><h2>Indique e ganhe dias grátis</h2><p class="hint">A cada amigo que pagar pelo seu link, você ganha 10 dias.</p><a class="btn btn-primary" href="/indicacoes">${icon.gift} ${access.active?'Ver minhas indicações':'Conhecer o benefício'}</a>${access.active?'':'<p class="hint">Geração de link exclusiva para assinantes com acesso ativo.</p>'}</section>
     <form class="profile-card settings-section" data-name-form>
       <h2>Dados da conta</h2><div class="field"><label for="profile-name">Nome de exibição</label><input class="input" id="profile-name" name="displayName" maxlength="60" value="${esc(user.name || '')}" autocomplete="name" required></div>
       <div class="field"><label for="profile-email">E-mail cadastrado</label><input class="input" id="profile-email" value="${esc(user.email)}" type="email" readonly aria-describedby="email-hint"><p class="hint" id="email-hint">O e-mail identifica sua conta e não pode ser alterado aqui.</p></div>

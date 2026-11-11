@@ -18,7 +18,7 @@ async function startup({loaded,published,url='https://kingdrama.test/',me={user:
     window:{addEventListener:(name,fn)=>{handlers[name]=fn;},scrollTo:()=>{}},
     location:{href:url,pathname:new URL(url).pathname,search:new URL(url).search,hash:'',replace:to=>redirects.push(to)},
     history:{state:null,replaceState:(_,unused,to)=>{cleaned.push(to);if(to){const target=new URL(to,context.location.href);Object.assign(context.location,{href:target.href,pathname:target.pathname,search:target.search});}}},
-    pages:{landing:async()=>'<p>Home</p>',home:async()=>'<p>Catalog</p>',title:async()=>'<p>Title details</p>',player:async()=>'<p>Player</p>'},authPages:{},profile:()=>'',privacy:()=>'',requests:()=>'',dashboard:()=>'',
+    pages:{landing:async()=>'<p>Home</p>',home:async()=>'<p>Catalog</p>',title:async()=>'<p>Title details</p>',player:async()=>'<p>Player</p>'},authPages:{},profile:()=>'',privacy:()=>'',requests:()=>'',referrals:()=>'',dashboard:()=>'',
     esc:value=>String(value || ''),icon:new Proxy({},{get:()=>''}),initials:()=> 'T',
     enhance:()=>{},sendActivity:()=>{},clearActivity:()=>{},
     fetch:async(path,options)=>{requests.push({path,options});return {ok:true,json:async()=>({versao:published})};},

@@ -521,6 +521,21 @@ a.chip:hover { color: var(--text); border-color: var(--line-strong); }
 .offers-grid { display:grid;grid-template-columns:minmax(0,1fr);gap:16px; }
 .offers-placeholder { padding:24px 18px;border:1px dashed var(--line-strong);border-radius:var(--radius);display:grid;gap:12px; }
 .offers-page .btn { min-height:48px;white-space:normal;text-align:center; }
+.referral-page .settings-section { display:grid;gap:16px;min-width:0; }
+.referral-page h2 { font-size:20px;line-height:1.35;margin:0; }
+.referral-page .hint { margin:0;line-height:1.6; }
+.referral-page .btn,.referral-promo .btn { min-height:48px;white-space:normal;text-align:center; }
+.referral-promo { border-color:rgba(233,185,73,.4); }
+.referral-gift svg { width:36px;height:36px;color:var(--gold); }
+.referral-copy { display:flex;gap:10px;margin-top:8px;min-width:0; }
+.referral-copy input { min-width:0;width:100%;font-size:16px; }
+.referral-copy button { flex-shrink:0; }
+.referral-stats { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0; }
+.referral-stats div { display:grid;align-content:start;gap:8px;padding:16px 10px;border:1px solid var(--line);border-radius:var(--radius-sm);min-width:0; }
+.referral-stats dt { font-size:13px;color:var(--muted);overflow-wrap:anywhere; }
+.referral-stats dd { font-size:30px;line-height:1;margin:0;font-weight:700;color:var(--gold-light);overflow-wrap:anywhere; }
+.referral-steps { padding-left:22px;margin:0;display:grid;gap:12px; }
+@media(max-width:380px) { .referral-copy { flex-direction:column; } .referral-copy button { width:100%; } }
 @media(min-width:900px) { .offers-grid { grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); } }
 .request-page .settings-section { display:grid;gap:16px;min-width:0; }
 .request-page h2,.request-page h3 { margin:0;font-size:18px;overflow-wrap:anywhere; }

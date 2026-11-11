@@ -13,6 +13,16 @@
   'use strict';
 
   const CFG = window.__KD_CONFIG__ || {};
+  const invitationFromUrl = new URL(location.href).searchParams.get('ref') || '';
+  let pendingInvitation = /^[a-f0-9]{32}$/.test(invitationFromUrl) ? invitationFromUrl : null;
+  try {
+    if (pendingInvitation) localStorage.setItem('kd_referral', JSON.stringify({ code: pendingInvitation, expires: Date.now() + 30 * 86400000 }));
+    else {
+      const saved = JSON.parse(localStorage.getItem('kd_referral') || 'null');
+      if (saved?.expires > Date.now() && /^[a-f0-9]{32}$/.test(saved.code)) pendingInvitation = saved.code;
+      else localStorage.removeItem('kd_referral');
+    }
+  } catch { /* The invitation in the URL still works when storage is unavailable. */ }
   if (!window.supabase || !CFG.supabaseUrl || !CFG.supabaseAnonKey) {
     console.error('KingDrama: configuração do Supabase ausente (js/config.js).');
     return;
@@ -261,6 +271,13 @@
     const p = url.pathname;
     let m;
 
+    if (p === '/api/referrals' && ['GET','POST'].includes(metodo)) {
+      const { erro } = await exigeLogin(false); if (erro) return erro;
+      const { data, error } = await sb.rpc(metodo === 'POST' ? 'create_referral_code' : 'referral_dashboard');
+      if (error) return json(error.code === '42501' ? 403 : 400, { error: error.message || 'Não foi possível consultar as indicações.' });
+      return json(200, metodo === 'POST' ? { code: data } : data);
+    }
+
     if (p === '/api/requests' && ['GET','POST'].includes(metodo)) {
       const { erro } = await exigeLogin(false); if (erro) return erro;
       const { data, error } = metodo === 'GET' ? await sb.rpc('customer_requests')
@@ -345,11 +362,13 @@
       if (senha.length < 8) return json(400, { error: 'A senha precisa ter pelo menos 8 caracteres.' });
       const { data, error } = await sb.auth.signUp({
         email, password: senha,
-        options: { data: { name, whatsapp } },
+        options: { data: { name, whatsapp, ...(pendingInvitation ? { referral_code: pendingInvitation } : {}) } },
       });
       if (error) return json(400, { error: traduzErro(error) });
       // Sem sessão = o projeto está exigindo confirmação de e-mail.
       if (!data.session) return json(400, { error: 'Não foi possível entrar automaticamente. Tente entrar com seu e-mail e senha.' });
+      pendingInvitation = null;
+      try { localStorage.removeItem('kd_referral'); } catch { /* Optional storage. */ }
       invalida(); await activateSession();
       return json(200, { ok: true });
     }

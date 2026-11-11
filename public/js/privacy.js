@@ -22,6 +22,7 @@ export function privacy() {
 <p>Utilizamos cookies e armazenamento local (localStorage) para:</p>
 <ul><li>Manter sua sessão ativa após o login.</li><li>Armazenar preferências da interface, como modo de exibição.</li><li>Registrar a origem do acesso (parâmetro <code>?src=</code>) para fins de análise de tráfego.</li><li>Controlar o período de teste gratuito para usuários não cadastrados.</li></ul>
 <p>Você pode limpar os dados armazenados a qualquer momento pelas configurações do navegador. Isso poderá desconectá-lo da plataforma.</p>
+<p>Quando você acessa um convite, podemos guardar o código de indicação no navegador por até 30 dias para vincular seu cadastro ao convite recebido. O cadastro, por si só, não gera recompensa: o benefício depende de pagamento confirmado.</p>
 <h2>5. Retenção de dados</h2>
 <p>Mantemos seus dados pessoais enquanto sua conta estiver ativa e pelo período necessário para a prestação dos nossos serviços.</p>
 <p>Após a exclusão da conta, os dados pessoais serão removidos de nossos sistemas em até 30 dias, salvo quando houver obrigação legal ou outra justificativa legítima de retenção.</p>

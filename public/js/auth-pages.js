@@ -1,6 +1,6 @@
 // Cadastro, entrada com e-mail e senha, acesso pendente e retorno do checkout.
-import { api, esc, icon } from './lib.js?v=254d4d7fded2';
-import { statusBadge } from './pages.js?v=254d4d7fded2';
+import { api, esc, icon } from './lib.js?v=a55dbb2fcdc5';
+import { statusBadge } from './pages.js?v=a55dbb2fcdc5';
 
 const top = (right = '') => `<header class="auth-top">
   <a href="/" class="logo" aria-label="KingDrama — página inicial"><img src="/img/logo.png" alt="" width="300" height="100"></a>${right}</header>`;

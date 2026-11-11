@@ -1,19 +1,21 @@
 // Roteador, estado da sessão e layout.
-import { api, esc, icon, initials, enhance } from './lib.js?v=254d4d7fded2';
-import * as pages from './pages.js?v=254d4d7fded2';
-import * as authPages from './auth-pages.js?v=254d4d7fded2';
-import { dashboard } from './admin.js?v=254d4d7fded2';
-import { clearActivity, sendActivity } from './activity.js?v=254d4d7fded2';
-import { privacy } from './privacy.js?v=254d4d7fded2';
-import { profile } from './profile.js?v=254d4d7fded2';
-import { requests } from './requests.js?v=254d4d7fded2';
-import { offers, offerPath } from './offers.js?v=254d4d7fded2';
+import { api, esc, icon, initials, enhance } from './lib.js?v=a55dbb2fcdc5';
+import * as pages from './pages.js?v=a55dbb2fcdc5';
+import * as authPages from './auth-pages.js?v=a55dbb2fcdc5';
+import { dashboard } from './admin.js?v=a55dbb2fcdc5';
+import { clearActivity, sendActivity } from './activity.js?v=a55dbb2fcdc5';
+import { privacy } from './privacy.js?v=a55dbb2fcdc5';
+import { profile } from './profile.js?v=a55dbb2fcdc5';
+import { requests } from './requests.js?v=a55dbb2fcdc5';
+import { offers, offerPath } from './offers.js?v=a55dbb2fcdc5';
+import { referrals } from './referrals.js?v=a55dbb2fcdc5';
 
 export const state = { me: null, site: null };
 const app = document.getElementById('app');
 
 // guard: 'public' (qualquer um) | 'guest' (só visitante) | 'user' (logado) | 'active' (acesso liberado)
 const routes = [
+  { re: /^\/indicacoes$/, guard: 'user', page: referrals, tab: 'perfil' },
   { re: /^\/ofertas$/, guard: 'user', page: offers },
   { re: /^\/pedidos$/, guard: 'user', page: requests, tab: 'pedidos' },
   { re: /^\/entrar-com-codigo$/, guard: 'guest', page: authPages.codeLogin, bare: true },
@@ -178,6 +180,7 @@ function shell(html, route) {
         <a role="menuitem" href="/favoritos">${icon.heart} Favoritos</a>
         <a role="menuitem" href="/historico">${icon.clock} Histórico</a>
         <a role="menuitem" href="/perfil">${icon.user} Perfil e assinatura</a>
+        <a role="menuitem" href="/indicacoes">${icon.gift} Indique e ganhe dias grátis</a>
         ${u?.isAdmin?'':`<a role="menuitem" href="/pedidos">${icon.request} Pedir doramas / Meus pedidos</a>`}
         <a role="menuitem" href="/perfil">${icon.lock} Excluir conta</a>
         <button role="menuitem" type="button" class="danger" data-logout>${icon.logout} Sair</button>
