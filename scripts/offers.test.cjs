@@ -17,9 +17,8 @@ function harness(){
 }
 test('cards use current products, durations and total checkout prices',async()=>{
   const {context,ctx}=harness();const html=await context.offers(ctx);
-  for(const id of ['P3QfUF','ZPO7Gw','LD4imo'])assert.ok(html.includes(`https://pay.lowify.com.br/checkout?product_id=${id}`));
-  assert.ok(!html.includes('https://pay.lowify.com.br/checkout?product_id=g18z8v'));
-  for(const price of ['24,90','79,90','129,90'])assert.ok(html.includes(price));
+  for(const id of ['g18z8v','P3QfUF','ZPO7Gw','LD4imo'])assert.ok(html.includes(`https://pay.lowify.com.br/checkout?product_id=${id}`));
+  for(const price of ['14,99','24,90','79,90','129,90'])assert.ok(html.includes(price));
   assert.deepEqual(config.plans.map(p=>[p.productId,p.period]),[['g18z8v',{days:7}],['P3QfUF',{months:1}],['ZPO7Gw',{months:3}],['LD4imo',{months:6}]]);
   assert.ok(html.includes('target="_blank" rel="noopener noreferrer"'));
   assert.ok(!html.includes('Plano Anual'));

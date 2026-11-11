@@ -4,7 +4,7 @@ Configuração pública dos cards: `public/config/ofertas.json`. Valores totais 
 
 | Produto | Período | Total |
 | --- | --- | --- |
-| g18z8v | Semanal, 7 dias | Indisponível (HTTP 404); card desabilitado |
+| g18z8v | Semanal, 7 dias | R$ 14,99 |
 | P3QfUF | Mensal, 1 mês | R$ 24,90 |
 | ZPO7Gw | Trimestral, 3 meses | R$ 79,90 |
 | LD4imo | Semestral, 6 meses | R$ 129,90 |
