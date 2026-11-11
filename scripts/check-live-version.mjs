@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 const expected=JSON.parse(fs.readFileSync(new URL('../public/config/versao.json',import.meta.url),'utf8')).versao;
-const hosts=['https://appkingdrama.netlify.app','https://kingdrama.site'];
+// kingdrama.site currently hosts the separate sales page, not this application.
+const hosts=['https://appkingdrama.netlify.app'];
+if(process.argv.includes('--include-main-domain'))hosts.push('https://kingdrama.site');
 let failures=0;
 for(const host of hosts) {
   try {
