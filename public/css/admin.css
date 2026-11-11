@@ -456,3 +456,13 @@
 .adm-request .field { display:grid; gap:8px; min-width:0; }
 .adm-request .btn { min-height:44px; white-space:normal; }
 .adm-request textarea { resize:vertical; }
+.adm-header [hidden] { display:none; }
+.adm-gate .stack { text-align:left; }
+.adm-gate .field { display:grid;gap:8px;min-width:0; }
+.adm-gate .input { min-width:0;max-width:100%;font-size:16px;letter-spacing:normal;text-align:left; }
+.adm-gate #adm-code { text-align:center;letter-spacing:5px; }
+.adm-gate .btn { min-height:48px;white-space:normal; }
+.adm-qr-local { display:flex;justify-content:center;max-width:100%;margin:20px auto;padding:12px;background:#fff;border-radius:12px;width:244px; }
+.adm-qr-local img,.adm-qr-local canvas { max-width:100%;height:auto; }
+.adm-gate details { text-align:left;margin:18px 0; }
+#admin-root { min-width:0; }

@@ -1,7 +1,8 @@
-import { api, esc, icon, card, row, enhance, toast, smallCover, initials } from './lib.js?v=6eb997326891';
-import { state } from './app.js?v=6eb997326891';
-import { accountBanner, mountAccountBanner } from './account-banner.js?v=6eb997326891';
-import { categoryLinks } from './category-menu.js?v=6eb997326891';
+import { api, esc, icon, card, row, enhance, toast, smallCover, initials } from './lib.js?v=48397e6a9d1c';
+import { state } from './app.js?v=48397e6a9d1c';
+import { accountBanner, mountAccountBanner } from './account-banner.js?v=48397e6a9d1c';
+import { categoryLinks } from './category-menu.js?v=48397e6a9d1c';
+import { loadPlayerControl, mountPlayerButton } from './player-button.js?v=48397e6a9d1c';
 
 const statusLabel = { active: 'Ativo', pending: 'Pendente', canceled: 'Cancelado', refunded: 'Reembolsado', expired: 'Expirado', chargeback: 'Contestado' };
 export const statusBadge = (s) => `<span class="status-badge ${s === 'active' ? 'status-active' : s === 'pending' ? 'status-pending' : 'status-other'}">${esc(statusLabel[s] || s)}</span>`;
@@ -320,7 +321,6 @@ export async function title(ctx) {
       <div class="detail-info">
         <h1>${esc(t.name)}</h1>
         <div class="chips">
-          ${hasEps ? `<span class="chip">${t.episodes.length} episódio${t.episodes.length > 1 ? 's' : ''}</span>` : ''}
           ${t.categories.map((c) => `<a class="chip" href="/categoria/${esc(c.id)}">${esc(c.name)}</a>`).join('')}
         </div>
         ${t.synopsis ? `<p class="synopsis">${esc(t.synopsis)}</p>` : ''}
@@ -333,7 +333,7 @@ export async function title(ctx) {
       </div>
     </div>
   </article>
-  ${hasEps ? `<section class="section" aria-labelledby="eps">
+  ${t.episodes.length>1 ? `<section class="section" aria-labelledby="eps">
     <h2 id="eps">Episódios</h2>
     <div class="ep-list">${t.episodes.map((e) => `<a href="/assistir/${esc(t.id)}/${e.number}" aria-label="Episódio ${e.number}${e.name ? ': ' + esc(e.name) : ''}">${e.number}</a>`).join('')}</div>
   </section>` : ''}
@@ -369,7 +369,11 @@ export async function player(ctx) {
   player.data = data;
   const ep = data?.episode;
   const src = data?.sources?.[0];
-  const embed = data?.embedUrl;
+  let embed = data?.embedUrl;
+  if(embed){
+    const url=new URL(embed);url.searchParams.set('autoplay','false');embed=url.href;
+    await loadPlayerControl().catch(()=>{});
+  }
   // Sem vídeo cadastrado: mostra a capa do título com o botão de play, sem aviso de indisponível
   let info = ep;
   if (!src && !embed && !ep) {
@@ -384,7 +388,7 @@ export async function player(ctx) {
   return `<div class="player-page">
     <div class="player-bar">
       <a class="icon-btn" href="/titulo/${esc(id)}" aria-label="Voltar para o título">${icon.back}</a>
-      <div class="t"><strong>${esc(info.titleName)}</strong><span>Episódio ${info.number}${info.name ? ' · ' + esc(info.name) : ''}</span></div>
+      <div class="t"><strong>${esc(info.titleName)}</strong></div>
     </div>
     <div class="player-stage">
       <div class="player-frame">
@@ -392,9 +396,10 @@ export async function player(ctx) {
           ? `<iframe src="${esc(embed)}" title="${esc(info.titleName)}" loading="eager" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`
           : src
             ? `<video controls playsinline preload="metadata" poster="${esc(ep.cover)}"></video>`
-            : `<div class="player-poster"><img src="${esc(info.cover)}" alt=""><button class="play-big" type="button" aria-label="Reproduzir">${icon.play}</button></div>`}
+            : `<div class="player-poster"><img src="${esc(info.cover)}" alt=""></div>`}
       </div>
     </div>
+    <div class="player-watch-actions"><button class="btn btn-primary" type="button" data-player-watch>${icon.play} Assistir</button><p class="hint" data-player-feedback role="status"></p><a class="player-channel" href="https://whatsapp.com/channel/0029Vb9NN6o8fewpZKqFQ80u" target="_blank" rel="noopener noreferrer">${icon.whatsapp}<span>Receba os lançamentos em primeira mão — siga e ative o sininho</span>${icon.next}</a></div>
     ${ep ? `<div class="player-controls">
       ${data.prev ? `<a class="btn btn-ghost" href="/assistir/${esc(id)}/${data.prev}">${icon.back} Ep. ${data.prev}</a>` : ''}
       ${data.next ? `<a class="btn btn-primary" href="/assistir/${esc(id)}/${data.next}">Próximo: ep. ${data.next} ${icon.next}</a>` : ''}
@@ -402,6 +407,7 @@ export async function player(ctx) {
   </div>`;
 }
 player.mount = (root, ctx) => {
+  const cleanupButton=mountPlayerButton(root);
   const data = player.data;
   let sessionAlive = true;
   const checkSession = async () => {
@@ -411,7 +417,7 @@ player.mount = (root, ctx) => {
   const sessionTimer = setInterval(() => { checkSession().catch(() => {}); }, 30000);
   const onVisible = () => { if (!document.hidden) checkSession().catch(() => {}); };
   document.addEventListener('visibilitychange', onVisible);
-  const stopSessionCheck = () => { sessionAlive = false; clearInterval(sessionTimer); document.removeEventListener('visibilitychange', onVisible); };
+  const stopSessionCheck = () => { sessionAlive = false; clearInterval(sessionTimer); document.removeEventListener('visibilitychange', onVisible);cleanupButton?.(); };
   const video = root.querySelector('video');
   if (!video || !data) return stopSessionCheck;
   let hls = null;
@@ -468,7 +474,7 @@ let hlsLib;
 function loadHls() {
   if (window.Hls) return Promise.resolve(window.Hls);
   hlsLib ||= new Promise((resolve, reject) => {
-    const s = Object.assign(document.createElement('script'), { src: '/vendor/hls.min.js?v=6eb997326891', async: true });
+    const s = Object.assign(document.createElement('script'), { src: '/vendor/hls.min.js?v=48397e6a9d1c', async: true });
     s.onload = () => resolve(window.Hls);
     s.onerror = () => { hlsLib = null; reject(new Error('hls.js indisponível')); };
     document.head.append(s);

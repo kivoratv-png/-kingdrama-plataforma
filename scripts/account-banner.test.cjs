@@ -16,9 +16,9 @@ function setup(reduced=false){
  vm.runInNewContext(source,context);
  return {context,slides,dots,controls,banner,timers,events,motionEvents,document,root:{querySelector:()=>banner}};
 }
-test('messages link to requests, the supplied WhatsApp and referrals with exactly ten days',()=>{
+test('messages link to requests, the WhatsApp channel and referrals with exactly ten days',()=>{
  const {context}=setup();const html=context.accountBanner(false);
- assert.ok(html.includes('href="/pedidos"'));assert.ok(html.includes('href="/indicacoes"'));assert.ok(html.includes('https://wa.me/5551920048910?'));
+ assert.ok(html.includes('href="/pedidos"'));assert.ok(html.includes('href="/indicacoes"'));assert.ok(html.includes('https://whatsapp.com/channel/0029Vb9NN6o8fewpZKqFQ80u'));
  assert.ok(html.includes('você ganha 10 dias'));assert.ok(!html.includes('15 dias'));
  assert.ok(!html.includes('promo-request-shortcut'));
  assert.ok(!html.includes('href="/admin"'));

@@ -1,12 +1,10 @@
-import { esc } from './lib.js?v=6eb997326891';
+import { esc } from './lib.js?v=48397e6a9d1c';
 const labels={received:'Recebido',reviewing:'Em análise',adding:'Adicionando',available:'Disponível',unavailable:'Indisponível'};
-export function mountAdminRequests(container) {
-  const client=window.__KD_SB__;
+export function mountAdminRequests(container,request) {
   const load=async()=>{
     container.innerHTML='<p role="status">Carregando pedidos…</p>';
-    const { data,error }=await client.rpc('admin_drama_requests');
+    const data=await request({view:'requests'});
     if(!container.isConnected)return;
-    if(error){container.textContent='Não foi possível carregar os pedidos. Atualize o painel.';return;}
     container.innerHTML=`<div class="settings-heading"><p>${data.requests.length} pedido(s)</p><button type="button" class="btn btn-ghost" data-request-refresh>Atualizar pedidos</button></div><p class="adm-note">Vincule o título do catálogo ao pedido. Quando esse título estiver publicado, o cliente verá “Já disponível” em Meus pedidos.</p><div class="stack">`+
       data.requests.map(r=>`<article class="adm-request"><div class="settings-heading"><h3>${esc(r.name)}</h3><span>${esc(new Date(r.created_at).toLocaleDateString('pt-BR'))}</span></div><p class="adm-note">${esc(r.customer_name || 'Cliente')} · ${esc(r.customer_email)}</p>${r.notes?`<p>${esc(r.notes)}</p>`:''}
       <form class="stack" data-admin-request="${esc(r.id)}"><div class="field"><label for="request-status-${esc(r.id)}">Andamento</label><select class="input" id="request-status-${esc(r.id)}" name="status">${Object.entries(labels).map(([key,label])=>`<option value="${key}" ${key===r.status?'selected':''}>${label}</option>`).join('')}</select></div>
@@ -17,12 +15,12 @@ export function mountAdminRequests(container) {
     container.querySelector('[data-request-refresh]').addEventListener('click',()=>{load().catch(showError);});
     container.querySelectorAll('[data-admin-request]').forEach(form=>form.addEventListener('submit',async e=>{
       e.preventDefault();const button=form.querySelector('button'),message=form.querySelector('[data-feedback]');button.disabled=true;
-      const { error }=await client.rpc('admin_update_drama_request',{p_id:form.dataset.adminRequest,p_status:form.elements.status.value,p_title:form.elements.title.value || null,p_note:form.elements.note.value});
+      let error;try{await request({},{action:'request-update',id:form.dataset.adminRequest,status:form.elements.status.value,title:form.elements.title.value || null,note:form.elements.note.value});}catch(failure){error=failure;}
       message.textContent=error?error.message:'Andamento salvo. O cliente já pode acompanhar a atualização.';button.disabled=false;
     }));
     const saveAddon=async(form,until)=>{
       const message=form.querySelector('[data-feedback]');form.querySelectorAll('button').forEach(b=>{b.disabled=true;});
-      const { error }=await client.rpc('admin_set_request_addon',{p_user:form.dataset.addon,p_until:until});
+      let error;try{await request({},{action:'request-addon',user:form.dataset.addon,until});}catch(failure){error=failure;}
       message.textContent=error?error.message:until?'Pedidos ilimitados ativados.':'Adicional removido.';form.querySelectorAll('button').forEach(b=>{b.disabled=false;});
     };
     container.querySelectorAll('[data-addon]').forEach(form=>{

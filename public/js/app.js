@@ -1,15 +1,14 @@
 // Roteador, estado da sessão e layout.
-import { api, esc, icon, initials, enhance } from './lib.js?v=6eb997326891';
-import * as pages from './pages.js?v=6eb997326891';
-import * as authPages from './auth-pages.js?v=6eb997326891';
-import { dashboard } from './admin.js?v=6eb997326891';
-import { clearActivity, sendActivity } from './activity.js?v=6eb997326891';
-import { privacy } from './privacy.js?v=6eb997326891';
-import { profile } from './profile.js?v=6eb997326891';
-import { requests } from './requests.js?v=6eb997326891';
-import { offers, offerPath } from './offers.js?v=6eb997326891';
-import { referrals } from './referrals.js?v=6eb997326891';
-import { mountCategoryMenu } from './category-menu.js?v=6eb997326891';
+import { api, esc, icon, initials, enhance } from './lib.js?v=48397e6a9d1c';
+import * as pages from './pages.js?v=48397e6a9d1c';
+import * as authPages from './auth-pages.js?v=48397e6a9d1c';
+import { clearActivity, sendActivity } from './activity.js?v=48397e6a9d1c';
+import { privacy } from './privacy.js?v=48397e6a9d1c';
+import { profile } from './profile.js?v=48397e6a9d1c';
+import { requests } from './requests.js?v=48397e6a9d1c';
+import { offers, offerPath } from './offers.js?v=48397e6a9d1c';
+import { referrals } from './referrals.js?v=48397e6a9d1c';
+import { mountCategoryMenu } from './category-menu.js?v=48397e6a9d1c';
 
 export const state = { me: null, site: null };
 const app = document.getElementById('app');
@@ -21,7 +20,7 @@ const routes = [
   { re: /^\/pedidos$/, guard: 'user', page: requests, tab: 'pedidos' },
   { re: /^\/entrar-com-codigo$/, guard: 'guest', page: authPages.codeLogin, bare: true },
   { re: /^\/politica-de-privacidade$/, guard: 'public', page: privacy, bare: true },
-  { re: /^\/admin$/, guard: 'user', page: dashboard, bare: true },
+  { re: /^\/admin$/, guard: 'public', page: () => { location.replace('/admin/'); return ''; }, bare: true },
   { re: /^\/$/, guard: 'root' },
   { re: /^\/inicio$/, guard: 'user', page: pages.home, tab: 'inicio', overHero: true },
   { re: /^\/buscar$/, guard: 'user', page: pages.search, tab: 'buscar' },

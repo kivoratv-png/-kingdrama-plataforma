@@ -1,21 +1,17 @@
-import { esc } from './lib.js?v=6eb997326891';
-import { mountAdminRequests } from './admin-requests.js?v=6eb997326891';
+import { esc } from './lib.js?v=48397e6a9d1c';
+import { mountAdminRequests } from './admin-requests.js?v=48397e6a9d1c';
 
-const client = window.__KD_SB__;
-let status;
-
-async function requestDashboard(params = {}) {
-  const { data, error } = await client.auth.getSession();
-  if (error || !data?.session?.access_token) throw Object.assign(new Error('Entre na sua conta.'), { status: 401 });
-  const response = await fetch(`/.netlify/functions/admin?${new URLSearchParams(params)}`, {
-    headers: { Authorization: `Bearer ${data.session.access_token}` },
-    cache: 'no-store',
+let pageToken=null;
+async function requestDashboard(params={},body){
+  const response=await fetch('/.netlify/functions/admin?'+new URLSearchParams(params),{
+    method:body?'POST':'GET',credentials:'same-origin',cache:'no-store',
+    headers:{...(pageToken?{'X-Admin-Session':pageToken}:{}),...(body?{'Content-Type':'application/json'}:{})},
+    body:body?JSON.stringify(body):undefined,
   });
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw Object.assign(new Error(body.error || 'Não foi possível carregar o painel.'), { status: response.status, code: body.code });
-  return body;
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw Object.assign(new Error(data.error||'Não foi possível acessar o painel.'),{status:response.status});
+  return data;
 }
-
 const dateTime = (value) => value ? new Date(value).toLocaleString('pt-BR') : '—';
 const userName = (user) => `<strong>${esc(user.name || 'Sem nome')}</strong><span>${esc(user.email || '')}</span>`;
 const stateName = { page: 'Navegando', player_open: 'Player aberto', playing: 'Reproduzindo', paused: 'Pausado', ended: 'Concluído', error: 'Erro no player' };
@@ -45,32 +41,63 @@ function usersRows(rows) {
 }
 
 export async function dashboard() {
-  status = await requestDashboard({ view: 'status' });
-  return `<div class="adm-shell">
-    <header class="adm-header"><div><a href="/inicio" class="adm-back">← Voltar ao KingDrama</a><h1>Administração</h1></div>
-      <span class="adm-security">Conta autorizada · autenticação em duas etapas</span></header>
-    <div data-admin-content>${status.mfa_required ? '' : '<p role="status">Carregando o painel…</p>'}</div>
-  </div>`;
+  return `<div class="adm-shell"><header class="adm-header"><div><a href="/inicio" class="adm-back">← Voltar ao KingDrama</a><h1>Administração</h1></div><button type="button" class="btn btn-ghost" data-admin-logout hidden>Sair do painel</button></header><div data-admin-content></div></div>`;
 }
 
-dashboard.mount = (root, ctx) => {
-  const content = root.querySelector('[data-admin-content]');
-  if (!content) return;
-  let disposed = false;
-  let busy = false;
-  let timer;
-  let page = 0;
-  let search = '';
-  let factorId;
-
+dashboard.mount = root => {
+  const content=root.querySelector('[data-admin-content]');
+  if(!content)return;
+  let disposed=false,busy=false,timer,page=0,search='';
+  pageToken=null;
+  const bootstrap=new URLSearchParams(location.hash.slice(1)).get('configurar');
+  if(bootstrap)history.replaceState(null,'',location.pathname);
+  const logoutButton=root.querySelector('[data-admin-logout]');
+  const revoke=()=>{
+    pageToken=null;
+    return fetch('/.netlify/functions/admin',{method:'POST',credentials:'same-origin',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'logout'})}).catch(()=>{});
+  };
+  const endSession=async()=>{clearInterval(timer);await revoke();if(!disposed)loginGate();};
+  logoutButton.addEventListener('click',endSession);
+  const authField=(name,label,type='text',autocomplete='off')=>`<div class="field"><label for="adm-${name}">${label}</label><input class="input" id="adm-${name}" name="${name}" type="${type}" autocomplete="${autocomplete}" required ${name==='code'?'inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6"':type==='password'?'maxlength="128"': 'minlength="3" maxlength="40" autocapitalize="none" spellcheck="false"'}></div>`;
+  function loginGate(message=''){
+    pageToken=null;logoutButton.hidden=true;clearInterval(timer);
+    content.innerHTML=`<section class="adm-gate"><div class="adm-lock" aria-hidden="true">2FA</div><h2>Entrar no painel</h2><p>Use as credenciais exclusivas do painel e o código do aplicativo autenticador. O login da plataforma não dá acesso a esta área.</p><form class="stack" data-console-login>${authField('username','Usuário','text','username')}${authField('password','Senha','password','current-password')}${authField('code','Código do autenticador','text','one-time-code')}<button class="btn btn-primary" type="submit">Entrar no painel</button><p class="adm-error" data-login-error role="alert">${esc(message)}</p></form></section>`;
+    content.querySelector('[data-console-login]').addEventListener('submit',async event=>{
+      event.preventDefault();const form=event.currentTarget,button=form.querySelector('button');button.disabled=true;
+      try{const result=await requestDashboard({},{action:'login',username:form.elements.username.value.trim(),password:form.elements.password.value,code:form.elements.code.value.trim()});form.reset();if(!disposed)startDashboard(result.pageToken);}
+      catch(error){if(!disposed){content.querySelector('[data-login-error]').textContent=error.message;form.elements.code.value='';button.disabled=false;}}
+    });
+  }
+  function setupGate(){
+    content.innerHTML=`<section class="adm-gate"><h2>Configurar o acesso exclusivo</h2><p>Crie o usuário e a senha deste painel. Eles não pertencem a nenhuma conta da plataforma.</p><form class="stack" data-console-setup>${authField('username','Escolha um usuário','text','username')}${authField('password','Crie uma senha (mínimo de 12 caracteres)','password','new-password')}${authField('confirmPassword','Repita a senha','password','new-password')}<button class="btn btn-primary" type="submit">Configurar autenticador</button><p class="adm-error" data-setup-error role="alert"></p></form></section>`;
+    const form=content.querySelector('[data-console-setup]');
+    for(const input of form.querySelectorAll('input[type="password"]'))input.minLength=12;
+    form.addEventListener('submit',async event=>{
+      event.preventDefault();const button=form.querySelector('button');button.disabled=true;
+      try{const data=await requestDashboard({},{action:'setup-begin',token:bootstrap,username:form.elements.username.value.trim(),password:form.elements.password.value,confirmPassword:form.elements.confirmPassword.value});form.reset();if(!disposed)authenticatorSetup(data);}
+      catch(error){if(!disposed){content.querySelector('[data-setup-error]').textContent=error.message;button.disabled=false;}}
+    });
+  }
+  function authenticatorSetup(data){
+    content.innerHTML=`<section class="adm-gate"><h2>Cadastre o autenticador do painel</h2><p>No Google Authenticator ou Microsoft Authenticator, adicione uma conta e escaneie este QR code.</p><div class="adm-qr-local" data-console-qr></div><details><summary>Inserir a chave manualmente</summary><p>Nome: KINGDRAMA Painel · ${esc(data.username)}. Tipo: baseado em tempo.</p><code class="adm-totp-key">${esc(data.secret)}</code></details><p>Este é um novo autenticador, separado do login da plataforma. Guarde a chave em um local seguro.</p><form class="stack" data-console-confirm>${authField('code','Código do novo autenticador','text','one-time-code')}<button class="btn btn-primary" type="submit">Confirmar e abrir painel</button><p class="adm-error" data-setup-error role="alert"></p></form></section>`;
+    const uri='otpauth://totp/'+encodeURIComponent('KINGDRAMA Painel:'+data.username)+'?secret='+encodeURIComponent(data.secret)+'&issuer=KINGDRAMA%20Painel&algorithm=SHA1&digits=6&period=30';
+    if(window.QRCode)new window.QRCode(content.querySelector('[data-console-qr]'),{text:uri,width:220,height:220,correctLevel:window.QRCode.CorrectLevel.M});
+    content.querySelector('[data-console-confirm]').addEventListener('submit',async event=>{
+      event.preventDefault();const form=event.currentTarget,button=form.querySelector('button');button.disabled=true;
+      try{const result=await requestDashboard({},{action:'setup-finish',token:bootstrap,code:form.elements.code.value.trim()});form.reset();if(!disposed)startDashboard(result.pageToken);}
+      catch(error){if(!disposed){content.querySelector('[data-setup-error]').textContent=error.message;button.disabled=false;}}
+    });
+  }
+  function startDashboard(token){pageToken=token;logoutButton.hidden=false;buildDashboard();load();timer=setInterval(load,15000);}
   async function load() {
-    if (busy || disposed || document.hidden) return;
+    if (busy || disposed || document.hidden || !pageToken) return;
+    const requestToken=pageToken;
     busy = true;
     const previousControls = content.querySelector('[data-refresh]');
     if (previousControls) previousControls.disabled = true;
     try {
       const data = await requestDashboard({ search, page: String(page) });
-      if (disposed) return;
+      if (disposed || requestToken!==pageToken) return;
       if (!content.querySelector('[data-dashboard]')) buildDashboard();
       const counts = data.counts;
       for (const [key, value] of Object.entries(counts)) {
@@ -90,10 +117,10 @@ dashboard.mount = (root, ctx) => {
       content.querySelector('[data-next]').disabled = (page + 1) * data.page_size >= data.users_total;
       content.querySelector('[data-admin-message]').textContent = '';
     } catch (error) {
-      if (disposed) return;
+      if (disposed || requestToken!==pageToken) return;
       if (error.status === 401) {
         content.replaceChildren();
-        ctx.navigate('/entrar', { replace: true });
+        loginGate('Sua sessão terminou. Informe novamente usuário, senha e autenticador.');
         return;
       }
       if (error.status === 403) {
@@ -132,7 +159,7 @@ dashboard.mount = (root, ctx) => {
         <div class="adm-table-wrap"><table><thead><tr><th>Usuário</th><th>Título</th><th>Erro</th><th>Página</th><th>Horário</th></tr></thead><tbody data-errors></tbody></table></div>
       </section>
     </div>`;
-    mountAdminRequests(content.querySelector('[data-admin-requests]'));
+    mountAdminRequests(content.querySelector('[data-admin-requests]'),requestDashboard);
     content.querySelector('[data-refresh]').addEventListener('click', load);
     content.querySelector('[data-user-search]').addEventListener('submit', (event) => {
       event.preventDefault();
@@ -145,95 +172,9 @@ dashboard.mount = (root, ctx) => {
     content.querySelector('[data-next]').addEventListener('click', () => { if (!busy) { page++; load(); } });
   }
 
-  async function mfaGate() {
-    content.innerHTML = `<section class="adm-gate"><div class="adm-lock" aria-hidden="true">2FA</div><h2>Proteja o acesso à administração</h2>
-      <p>Use um aplicativo autenticador, como Google Authenticator ou Microsoft Authenticator, para confirmar sua identidade.</p>
-      <div data-mfa-setup><p role="status">Conferindo o autenticador…</p></div><p class="adm-error" data-mfa-error role="alert"></p></section>`;
-    const setup = content.querySelector('[data-mfa-setup]');
-    try {
-      const { data, error } = await client.auth.mfa.listFactors();
-      if (error) throw error;
-      if (disposed) return;
-      const verified = data.totp.find((factor) => factor.status === 'verified');
-      if (verified) {
-        factorId = verified.id;
-        codeForm();
-      } else {
-        setup.innerHTML = '<button class="btn btn-primary" type="button" data-enroll>Configurar autenticador</button>';
-        setup.querySelector('[data-enroll]').addEventListener('click', async (event) => {
-          event.currentTarget.disabled = true;
-          try {
-            // Remove only unfinished enrollments for this panel, which cannot
-            // be resumed because Supabase returns their secret only once.
-            for (const factor of data.all.filter((f) => f.factor_type === 'totp' && f.status === 'unverified' && f.friendly_name === 'KingDrama Administração')) {
-              const result = await client.auth.mfa.unenroll({ factorId: factor.id });
-              if (result.error) throw result.error;
-            }
-            const result = await client.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'KingDrama Administração' });
-            if (result.error) throw result.error;
-            if (disposed) return;
-            factorId = result.data.id;
-            codeForm(result.data.totp);
-          } catch (failure) {
-            if (!disposed) {
-              content.querySelector('[data-mfa-error]').textContent = 'Não foi possível configurar o autenticador. Recarregue e tente novamente.';
-              const button = setup.querySelector('[data-enroll]');
-              if (button) button.disabled = false;
-            }
-          }
-        });
-      }
-    } catch {
-      if (!disposed) content.querySelector('[data-mfa-error]').textContent = 'Não foi possível consultar os fatores. Recarregue e tente novamente.';
-    }
-  }
-
-  function codeForm(totp) {
-    const setup = content.querySelector('[data-mfa-setup]');
-    const qr = totp?.qr_code?.startsWith('data:image/svg+xml') ? totp.qr_code : '';
-    setup.innerHTML = `${totp ? `<p>Escaneie este QR code no aplicativo autenticador.</p>${qr ? `<img class="adm-qr" src="${esc(qr)}" alt="QR code para cadastrar o autenticador" width="220" height="220">` : ''}
-      <details><summary>Inserir chave manualmente</summary><code class="adm-totp-key">${esc(totp.secret)}</code></details>` : ''}
-      <form data-mfa-form><label for="adm-code">Código de seis dígitos</label><input class="input" id="adm-code" name="code" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="one-time-code" required>
-      <button class="btn btn-primary" type="submit">Confirmar e abrir painel</button></form>`;
-    setup.querySelector('[data-mfa-form]').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const form = event.currentTarget;
-      const button = form.querySelector('button');
-      button.disabled = true;
-      const code = form.elements.code.value.trim();
-      content.querySelector('[data-mfa-error]').textContent = '';
-      try {
-        const { error } = await client.auth.mfa.challengeAndVerify({ factorId, code });
-        form.reset();
-        if (error) throw error;
-        if (disposed) return;
-        setup.replaceChildren();
-        ctx.navigate('/admin', { replace: true });
-      } catch {
-        if (!disposed) {
-          content.querySelector('[data-mfa-error]').textContent = 'Código inválido ou expirado. Use o código atual do aplicativo.';
-          button.disabled = false;
-        }
-      }
-    });
-  }
-
-  const onVisibility = () => { if (!document.hidden && !status.mfa_required) load(); };
-  document.addEventListener('visibilitychange', onVisibility);
-  if (status.mfa_required) mfaGate();
-  else { load(); timer = setInterval(load, 15000); }
-  const { data: authListener } = client.auth.onAuthStateChange((event, session) => {
-    if (!session && !disposed) {
-      content.replaceChildren();
-      clearInterval(timer);
-      ctx.navigate('/entrar', { replace: true });
-    }
-  });
-  return () => {
-    disposed = true;
-    clearInterval(timer);
-    content.replaceChildren();
-    document.removeEventListener('visibilitychange', onVisibility);
-    authListener.subscription.unsubscribe();
-  };
+  const onVisibility=()=>{if(!document.hidden&&pageToken)load();};
+  const onExit=()=>{clearInterval(timer);revoke();};
+  document.addEventListener('visibilitychange',onVisibility);window.addEventListener('pagehide',onExit);
+  if(bootstrap&&/^[\w-]{43}$/.test(bootstrap))setupGate();else loginGate();
+  return ()=>{disposed=true;clearInterval(timer);pageToken=null;content.replaceChildren();document.removeEventListener('visibilitychange',onVisibility);window.removeEventListener('pagehide',onExit);revoke();};
 };

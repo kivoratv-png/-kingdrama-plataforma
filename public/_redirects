@@ -1,2 +1,4 @@
 # O site é uma SPA: qualquer endereço que não seja um arquivo abre o index.html.
+/admin  /admin/index.html  200
+/admin/  /admin/index.html  200
 /*  /index.html  200

@@ -32,7 +32,7 @@ function normalize(text) {
 }
 
 function generateVersion(root) {
-  const files = ['index.html', '_headers', '_redirects', 'manifest.webmanifest']
+  const files = ['index.html', 'admin/index.html', '_headers', '_redirects', 'manifest.webmanifest']
     .map(name => path.join(root, name)).filter(file => fs.existsSync(file));
   for (const folder of ['js', 'css', 'config', 'vendor']) {
     const directory = path.join(root, folder);
@@ -50,7 +50,7 @@ function generateVersion(root) {
   const version = hash.digest('hex').slice(0, 12);
   const rewritten = [];
   // Include transitive imports and the on-demand HLS script in this release.
-  for (const file of files.filter(file => file === path.join(root, 'index.html') || path.dirname(file) === path.join(root, 'js'))) {
+  for (const file of files.filter(file => file.endsWith('.html') || path.dirname(file) === path.join(root, 'js'))) {
     const before = fs.readFileSync(file, 'utf8');
     const after = normalize(before)
       .replace(/(['"])((?:\.{1,2}\/|\/)[^'"\s?]+\.(?:js|css))\1/g, (_, quote, url) => `${quote}${url}?v=${version}${quote}`)

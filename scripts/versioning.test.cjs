@@ -9,6 +9,8 @@ test('versions the complete module graph and remains stable across repeated runs
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kingdrama-version-'));
   for (const directory of ['js','css','config','vendor']) fs.mkdirSync(path.join(root,directory));
   fs.writeFileSync(path.join(root,'index.html'), '<meta name="kingdrama-version" content="development"><link href="/css/app.css"><script src="/js/app.js"></script><link href="/js/lib.js">');
+  fs.mkdirSync(path.join(root,'admin'));
+  fs.writeFileSync(path.join(root,'admin/index.html'), '<meta name="kingdrama-version" content="development"><script src="/js/admin-entry.js"></script>');
   fs.writeFileSync(path.join(root,'js/app.js'), 'import { a } from "./lib.js"; import("./page.js"); const hls="/vendor/hls.min.js";');
   fs.writeFileSync(path.join(root,'js/lib.js'), 'import "./app.js";export const a=1;');
   fs.writeFileSync(path.join(root,'js/page.js'), 'export const page=1;');
@@ -16,6 +18,7 @@ test('versions the complete module graph and remains stable across repeated runs
   fs.writeFileSync(path.join(root,'config/auth.json'), '{"enabled":false}');
   fs.writeFileSync(path.join(root,'vendor/hls.min.js'), 'window.Hls={};');
   const first=generateVersion(root), manifest=fs.readFileSync(path.join(root,'config/versao.json'),'utf8');
+  assert.ok(fs.readFileSync(path.join(root,'admin/index.html'),'utf8').includes(`/js/admin-entry.js?v=${first.version}`));
   const html=fs.readFileSync(path.join(root,'index.html'),'utf8'), app=fs.readFileSync(path.join(root,'js/app.js'),'utf8');
   assert.ok(html.includes(`/css/app.css?v=${first.version}`));
   assert.ok(html.includes(`content="${first.version}"`));

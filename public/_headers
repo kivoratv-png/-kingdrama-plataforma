@@ -19,3 +19,7 @@
 /admin
   Referrer-Policy: no-referrer
   X-Robots-Tag: noindex, nofollow
+
+/admin/*
+  Referrer-Policy: no-referrer
+  X-Robots-Tag: noindex, nofollow
