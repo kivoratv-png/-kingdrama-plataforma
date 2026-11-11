@@ -510,6 +510,14 @@ a.chip:hover { color: var(--text); border-color: var(--line-strong); }
 .tabbar.with-requests { grid-template-columns:repeat(6,minmax(0,1fr)); }
 .tabbar.with-requests a { min-width:0; font-size:10px; padding-inline:1px; }
 .tabbar.with-requests a span { max-width:100%; line-height:1.15; text-align:center; }
+.offers-page .settings-section { display:grid;gap:16px;min-width:0; }
+.offers-page h2 { font-size:20px;line-height:1.35;margin:0; }
+.offers-page p { margin:0;color:var(--muted);line-height:1.6; }
+.offer-icon svg { width:32px;height:32px;color:var(--gold); }
+.offers-grid { display:grid;grid-template-columns:minmax(0,1fr);gap:16px; }
+.offers-placeholder { padding:24px 18px;border:1px dashed var(--line-strong);border-radius:var(--radius);display:grid;gap:12px; }
+.offers-page .btn { min-height:48px;white-space:normal;text-align:center; }
+@media(min-width:900px) { .offers-grid { grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); } }
 .request-page .settings-section { display:grid;gap:16px;min-width:0; }
 .request-page h2,.request-page h3 { margin:0;font-size:18px;overflow-wrap:anywhere; }
 .request-page .hint { line-height:1.6; }

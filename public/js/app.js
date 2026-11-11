@@ -1,38 +1,40 @@
 // Roteador, estado da sessão e layout.
-import { api, esc, icon, initials, enhance } from './lib.js?v=8b648d141961';
-import * as pages from './pages.js?v=8b648d141961';
-import * as authPages from './auth-pages.js?v=8b648d141961';
-import { dashboard } from './admin.js?v=8b648d141961';
-import { clearActivity, sendActivity } from './activity.js?v=8b648d141961';
-import { privacy } from './privacy.js?v=8b648d141961';
-import { profile } from './profile.js?v=8b648d141961';
-import { requests } from './requests.js?v=8b648d141961';
+import { api, esc, icon, initials, enhance } from './lib.js?v=3e19f7799880';
+import * as pages from './pages.js?v=3e19f7799880';
+import * as authPages from './auth-pages.js?v=3e19f7799880';
+import { dashboard } from './admin.js?v=3e19f7799880';
+import { clearActivity, sendActivity } from './activity.js?v=3e19f7799880';
+import { privacy } from './privacy.js?v=3e19f7799880';
+import { profile } from './profile.js?v=3e19f7799880';
+import { requests } from './requests.js?v=3e19f7799880';
+import { offers, offerPath } from './offers.js?v=3e19f7799880';
 
 export const state = { me: null, site: null };
 const app = document.getElementById('app');
 
 // guard: 'public' (qualquer um) | 'guest' (só visitante) | 'user' (logado) | 'active' (acesso liberado)
 const routes = [
+  { re: /^\/ofertas$/, guard: 'user', page: offers },
   { re: /^\/pedidos$/, guard: 'user', page: requests, tab: 'pedidos' },
   { re: /^\/entrar-com-codigo$/, guard: 'guest', page: authPages.codeLogin, bare: true },
   { re: /^\/politica-de-privacidade$/, guard: 'public', page: privacy, bare: true },
   { re: /^\/admin$/, guard: 'user', page: dashboard, bare: true },
   { re: /^\/$/, guard: 'root' },
-  { re: /^\/inicio$/, guard: 'active', page: pages.home, tab: 'inicio', overHero: true },
-  { re: /^\/buscar$/, guard: 'active', page: pages.search, tab: 'buscar' },
-  { re: /^\/categorias$/, guard: 'active', page: pages.categories, tab: 'categorias' },
-  { re: /^\/categoria\/([\w-]+)$/, guard: 'active', page: pages.category, tab: 'categorias' },
-  { re: /^\/titulo\/([\w-]+)$/, guard: 'active', page: pages.title, overHero: true },
+  { re: /^\/inicio$/, guard: 'user', page: pages.home, tab: 'inicio', overHero: true },
+  { re: /^\/buscar$/, guard: 'user', page: pages.search, tab: 'buscar' },
+  { re: /^\/categorias$/, guard: 'user', page: pages.categories, tab: 'categorias' },
+  { re: /^\/categoria\/([\w-]+)$/, guard: 'user', page: pages.category, tab: 'categorias' },
+  { re: /^\/titulo\/([\w-]+)$/, guard: 'user', page: pages.title, overHero: true },
   { re: /^\/assistir\/([\w-]+)\/(\d+)$/, guard: 'active', page: pages.player, bare: true },
-  { re: /^\/minha-lista$/, guard: 'active', page: pages.favorites, tab: 'lista' },
-  { re: /^\/em-breve$/, guard: 'active', page: pages.comingSoon },
-  { re: /^\/historico$/, guard: 'active', page: pages.watchHistory, tab: 'perfil' },
+  { re: /^\/minha-lista$/, guard: 'user', page: pages.favorites, tab: 'lista' },
+  { re: /^\/em-breve$/, guard: 'user', page: pages.comingSoon },
+  { re: /^\/historico$/, guard: 'user', page: pages.watchHistory, tab: 'perfil' },
   { re: /^\/perfil$/, guard: 'user', page: profile, tab: 'perfil' },
   { re: /^\/entrar$/, guard: 'guest', page: authPages.login, bare: true },
   { re: /^\/cadastro$/, guard: 'guest', page: authPages.signup, bare: true },
   { re: /^\/recuperar$/, guard: 'guest', page: authPages.recover, bare: true },
   { re: /^\/nova-senha$/, guard: 'public', page: authPages.newPassword, bare: true },
-  { re: /^\/acesso$/, guard: 'user', page: authPages.pending, bare: true },
+  { re: /^\/acesso$/, guard: 'user', page: (ctx) => { ctx.navigate('/ofertas', { replace: true }); return ''; } },
   { re: /^\/pagamento\/retorno$/, guard: 'user', page: authPages.checkoutReturn, bare: true },
 ];
 
@@ -104,14 +106,14 @@ export async function render() {
   // Guardas de acesso. A liberação real é sempre verificada pelo servidor (as APIs devolvem 401/403).
   if (route.guard === 'root') {
     if (!logged) return shellBare(await pages.landing(), { landing: true });
-    return navigate(isActive() ? '/inicio' : '/acesso', { replace: true });
+    return navigate('/inicio', { replace: true });
   }
-  if (route.guard === 'guest' && logged) return navigate(isActive() ? '/inicio' : '/acesso', { replace: true });
+  if (route.guard === 'guest' && logged) return navigate('/inicio', { replace: true });
   if ((route.guard === 'user' || route.guard === 'active') && !logged) {
     sessionStorageSet('kd_after_login', location.pathname + location.search);
     return navigate('/entrar', { replace: true });
   }
-  if (route.guard === 'active' && !isActive()) return navigate('/acesso', { replace: true });
+  if (route.guard === 'active' && !isActive()) return navigate(offerPath(path), { replace: true });
 
   const ctx = { params, query: new URLSearchParams(location.search), state, navigate, refreshMe };
   if (route.bare) {
@@ -124,7 +126,7 @@ export async function render() {
     html = await route.page(ctx);
   } catch (e) {
     if (e.status === 401) { await refreshMe(); return navigate('/entrar', { replace: true }); }
-    if (e.status === 403 && e.code === 'access_pending') { await refreshMe(); return navigate('/acesso', { replace: true }); }
+    if (e.status === 403 && e.code === 'access_pending') { await refreshMe(); return navigate(offerPath(path), { replace: true }); }
     if (e.status === 403 && e.code === 'device_limit') return navigate('/perfil', { replace: true });
     html = pages.errorPage(e);
   }

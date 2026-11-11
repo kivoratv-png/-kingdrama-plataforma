@@ -434,8 +434,8 @@
 
     if (!p.startsWith('/api/')) return naoEncontrado();
 
-    // ---- Daqui para baixo, só com acesso liberado
-    const { erro, me } = await exigeLogin(true);
+    // Browse freely after login. Only playback/progress require a paid subscription.
+    const { erro, me } = await exigeLogin(p.startsWith('/api/play/'));
     if (erro) return erro;
 
     if (metodo === 'GET' && p === '/api/home') {

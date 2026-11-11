@@ -1,4 +1,4 @@
-import { api, esc, icon, initials, toast } from './lib.js?v=8b648d141961';
+import { api, esc, icon, initials, toast } from './lib.js?v=3e19f7799880';
 
 const date = value => value ? new Date(value).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' }) : 'Não informado';
 const statuses = { active:'Ativa', pending:'Pendente', canceled:'Cancelada', refunded:'Reembolsada', expired:'Expirada', chargeback:'Contestada' };
@@ -19,7 +19,7 @@ export function profile(ctx) {
     <section class="profile-card settings-section" aria-labelledby="subscription-heading">
       <div class="settings-heading"><h2 id="subscription-heading">Minha assinatura</h2><span class="status-badge ${access.active?'status-active':'status-other'}">${esc(statuses[status] || 'Sem assinatura')}</span></div>
       <dl class="account-facts"><div><dt>Plano</dt><dd>${esc(access.planCode || 'Ainda não contratado')}</dd></div><div><dt>${expired?'Expirou em':'Vencimento'}</dt><dd>${access.periodEnd?esc(date(access.periodEnd)):access.active?'Sem data de expiração':'Sem assinatura ativa'}</dd></div><div><dt>Conta criada em</dt><dd>${esc(date(user.createdAt))}</dd></div></dl>
-      ${access.active?'':'<a class="btn btn-primary" href="/acesso">Ver situação do acesso</a>'}
+      ${access.active?'':'<a class="btn btn-primary" href="/ofertas">Ver ofertas de assinatura</a>'}
     </section>
     <form class="profile-card settings-section" data-name-form>
       <h2>Dados da conta</h2><div class="field"><label for="profile-name">Nome de exibição</label><input class="input" id="profile-name" name="displayName" maxlength="60" value="${esc(user.name || '')}" autocomplete="name" required></div>
