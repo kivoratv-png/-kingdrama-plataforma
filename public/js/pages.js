@@ -479,7 +479,6 @@ export async function watchHistory() {
 // ============================================================ Perfil
 export async function profile(ctx) {
   const { user, access } = ctx.state.me;
-  const { data: adminAllowed } = await window.__KD_SB__.rpc('platform_admin_status').catch(() => ({ data: false }));
   const since = new Date(user.createdAt + 'Z').toLocaleDateString('pt-BR');
   return `<div class="page-head narrow"><h1>Perfil</h1></div>
   <div class="wrap narrow stack">
@@ -499,7 +498,6 @@ export async function profile(ctx) {
       ${access.active ? '' : '<a class="btn btn-primary" href="/acesso">Ver situação do acesso</a>'}
     </div>
     <nav class="list-links" aria-label="Conta">
-      ${adminAllowed === true ? `<a href="/admin">${icon.user} Administração ${icon.chev}</a>` : ''}
       ${access.active ? `<a href="/minha-lista">${icon.heart} Minha lista ${icon.chev}</a><a href="/historico">${icon.clock} Histórico ${icon.chev}</a>` : ''}
       <button type="button" data-logout style="color:var(--danger)">${icon.logout} Sair da conta</button>
     </nav>
