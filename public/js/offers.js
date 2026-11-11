@@ -1,4 +1,4 @@
-import { api, esc, icon } from './lib.js?v=3b887926cf0c';
+import { api, esc, icon } from './lib.js?v=d433188fd528';
 
 export function offerPath(path) {
   const match = path.match(/^\/assistir\/([\w-]+)\/(\d+)$/);

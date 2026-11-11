@@ -1,4 +1,4 @@
-import { api, esc, icon, initials, toast } from './lib.js?v=3b887926cf0c';
+import { api, esc, icon, initials, toast } from './lib.js?v=d433188fd528';
 
 const date = value => value ? new Date(value).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' }) : 'Não informado';
 const statuses = { active:'Ativa', pending:'Pendente', canceled:'Cancelada', refunded:'Reembolsada', expired:'Expirada', chargeback:'Contestada' };
@@ -22,6 +22,7 @@ export function profile(ctx) {
       ${access.active?'':'<a class="btn btn-primary" href="/ofertas">Ver ofertas de assinatura</a>'}
     </section>
     <section class="profile-card settings-section referral-promo"><h2>Indique e ganhe dias grátis</h2><p class="hint">A cada amigo que pagar pelo seu link, você ganha 10 dias.</p><a class="btn btn-primary" href="/indicacoes">${icon.gift} ${access.active?'Ver minhas indicações':'Conhecer o benefício'}</a>${access.active?'':'<p class="hint">Geração de link exclusiva para assinantes com acesso ativo.</p>'}</section>
+    ${user.isAdmin?'<section id="admin-requests" class="profile-card settings-section"><h2>Pedidos de clientes</h2><p class="hint">Para analisar os pedidos e vinculá-los ao catálogo, use a seção Pedidos no painel administrativo, acessado pelo link separado.</p></section>':''}
     <form class="profile-card settings-section" data-name-form>
       <h2>Dados da conta</h2><div class="field"><label for="profile-name">Nome de exibição</label><input class="input" id="profile-name" name="displayName" maxlength="60" value="${esc(user.name || '')}" autocomplete="name" required></div>
       <div class="field"><label for="profile-email">E-mail cadastrado</label><input class="input" id="profile-email" value="${esc(user.email)}" type="email" readonly aria-describedby="email-hint"><p class="hint" id="email-hint">O e-mail identifica sua conta e não pode ser alterado aqui.</p></div>
