@@ -1,13 +1,13 @@
 // Roteador, estado da sessão e layout.
-import { api, esc, icon, initials, enhance } from './lib.js?v=3e19f7799880';
-import * as pages from './pages.js?v=3e19f7799880';
-import * as authPages from './auth-pages.js?v=3e19f7799880';
-import { dashboard } from './admin.js?v=3e19f7799880';
-import { clearActivity, sendActivity } from './activity.js?v=3e19f7799880';
-import { privacy } from './privacy.js?v=3e19f7799880';
-import { profile } from './profile.js?v=3e19f7799880';
-import { requests } from './requests.js?v=3e19f7799880';
-import { offers, offerPath } from './offers.js?v=3e19f7799880';
+import { api, esc, icon, initials, enhance } from './lib.js?v=7e9548d5f437';
+import * as pages from './pages.js?v=7e9548d5f437';
+import * as authPages from './auth-pages.js?v=7e9548d5f437';
+import { dashboard } from './admin.js?v=7e9548d5f437';
+import { clearActivity, sendActivity } from './activity.js?v=7e9548d5f437';
+import { privacy } from './privacy.js?v=7e9548d5f437';
+import { profile } from './profile.js?v=7e9548d5f437';
+import { requests } from './requests.js?v=7e9548d5f437';
+import { offers, offerPath } from './offers.js?v=7e9548d5f437';
 
 export const state = { me: null, site: null };
 const app = document.getElementById('app');
@@ -162,7 +162,6 @@ function shell(html, route) {
       <a href="/inicio" ${cur('inicio')}>Início</a>
       <a href="/categorias" ${cur('categorias')}>Categorias</a>
       <a href="/minha-lista" ${cur('lista')}>Minha lista</a>
-      <a href="/perfil" ${cur('perfil')}>Perfil</a>
       ${u?.isAdmin?'':`<a href="/pedidos" ${cur('pedidos')}>Pedir doramas</a>`}
     </nav>
     <div class="spacer"></div>
