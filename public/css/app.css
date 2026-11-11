@@ -245,13 +245,6 @@ a.chip:hover { color: var(--text); border-color: var(--line-strong); }
 .promo-action svg { width:17px;height:17px;flex:none; }
 .promo-symbol { display:none; }
 .promo-end { display:none; }
-.promo-controls { display:flex;justify-content:space-between;align-items:center;gap:8px; }
-.promo-dots,.promo-buttons { display:flex;align-items:center; }
-.promo-dots button { display:grid;place-items:center;border:0;background:none;min-width:32px;min-height:44px;padding:0; }
-.promo-dots span { width:7px;height:7px;border-radius:10px;background:var(--faint); }
-.promo-dots [aria-current="true"] span { width:22px;background:var(--gold); }
-.promo-pause { min-height:44px;min-width:64px;padding:8px;border:0;background:none;color:var(--muted);font-size:12px; }
-.promo-buttons .icon-btn svg { width:18px;height:18px; }
 @media(min-width:600px) { .promo-slide { min-height:172px;padding:24px 28px; } .promo-symbol { display:grid;place-items:center;flex:0 0 64px;height:64px;border:1px solid rgba(255,255,255,.2);border-radius:18px;background:rgba(255,255,255,.08); } .promo-symbol svg { width:30px;height:30px; } .promo-copy h2 { font-size:25px; } }
 @media(min-width:900px) { .account-promos { margin-top:32px; } .promo-slide { min-height:164px; } .promo-end { display:block;flex:none;opacity:.65;margin-left:20px; } .promo-end svg { width:32px;height:32px; } }
 

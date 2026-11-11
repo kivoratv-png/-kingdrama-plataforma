@@ -1,14 +1,14 @@
 // Roteador, estado da sessão e layout.
-import { api, esc, icon, initials, enhance } from './lib.js?v=d433188fd528';
-import * as pages from './pages.js?v=d433188fd528';
-import * as authPages from './auth-pages.js?v=d433188fd528';
-import { dashboard } from './admin.js?v=d433188fd528';
-import { clearActivity, sendActivity } from './activity.js?v=d433188fd528';
-import { privacy } from './privacy.js?v=d433188fd528';
-import { profile } from './profile.js?v=d433188fd528';
-import { requests } from './requests.js?v=d433188fd528';
-import { offers, offerPath } from './offers.js?v=d433188fd528';
-import { referrals } from './referrals.js?v=d433188fd528';
+import { api, esc, icon, initials, enhance } from './lib.js?v=c82799fede92';
+import * as pages from './pages.js?v=c82799fede92';
+import * as authPages from './auth-pages.js?v=c82799fede92';
+import { dashboard } from './admin.js?v=c82799fede92';
+import { clearActivity, sendActivity } from './activity.js?v=c82799fede92';
+import { privacy } from './privacy.js?v=c82799fede92';
+import { profile } from './profile.js?v=c82799fede92';
+import { requests } from './requests.js?v=c82799fede92';
+import { offers, offerPath } from './offers.js?v=c82799fede92';
+import { referrals } from './referrals.js?v=c82799fede92';
 
 export const state = { me: null, site: null };
 const app = document.getElementById('app');
@@ -164,7 +164,7 @@ function shell(html, route) {
       <a href="/inicio" ${cur('inicio')}>Início</a>
       <a href="/categorias" ${cur('categorias')}>Categorias</a>
       <a href="/favoritos" ${cur('lista')}>Favoritos</a>
-      ${u?.isAdmin?'':`<a href="/pedidos" ${cur('pedidos')}>Pedir doramas</a>`}
+      <a href="/pedidos" ${cur('pedidos')}>Pedir</a>
     </nav>
     <div class="spacer"></div>
     <form class="top-search" role="search" action="/buscar">
@@ -188,12 +188,12 @@ function shell(html, route) {
     </div>
   </header>
   <main id="main" tabindex="-1">${html}</main>
-  <nav class="tabbar ${u?.isAdmin?'':'with-requests'}" aria-label="Navegação">
+  <nav class="tabbar with-requests" aria-label="Navegação">
     <a href="/inicio" ${cur('inicio')}>${icon.home}<span>Início</span></a>
     <a href="/buscar" ${cur('buscar')}>${icon.search}<span>Buscar</span></a>
     <a href="/categorias" ${cur('categorias')}>${icon.grid}<span>Categorias</span></a>
     <a href="/favoritos" ${cur('lista')}>${icon.heart}<span>Favoritos</span></a>
-    ${u?.isAdmin?'':`<a href="/pedidos" ${cur('pedidos')}>${icon.request}<span>Pedir doramas</span></a>`}
+    <a href="/pedidos" ${cur('pedidos')}>${icon.request}<span>Pedir</span></a>
     <a href="/perfil" ${cur('perfil')}>${icon.user}<span>Perfil</span></a>
   </nav>`;
   enhance(app);
