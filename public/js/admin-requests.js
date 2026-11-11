@@ -1,4 +1,4 @@
-import { esc } from './lib.js?v=69eeb26e4b0b';
+import { esc } from './lib.js?v=246ead84eab0';
 const labels={received:'Recebido',reviewing:'Em análise',adding:'Adicionando',available:'Disponível',unavailable:'Indisponível'};
 export function mountAdminRequests(container) {
   const client=window.__KD_SB__;

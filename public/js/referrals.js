@@ -1,4 +1,4 @@
-import { api,esc,icon } from './lib.js?v=69eeb26e4b0b';
+import { api,esc,icon } from './lib.js?v=246ead84eab0';
 
 export async function referrals() {
   const data=await api('/api/referrals');
@@ -35,7 +35,7 @@ referrals.mount=(root,ctx)=>{
       root.querySelector('[data-valid-referrals]').textContent=Number(data.validReferrals).toLocaleString('pt-BR');
       root.querySelector('[data-days-earned]').textContent=Number(data.daysEarned).toLocaleString('pt-BR');
       root.querySelector('[data-pending-referrals]').textContent=Number(data.pendingReferrals || 0).toLocaleString('pt-BR');
-      if(Number(data.daysEarned)>before){await ctx.refreshMe();if(!disposed)feedback.textContent=`Você ganhou ${Number(data.daysEarned)-before} dias! Seu vencimento foi atualizado.`;}
+      if(Number(data.daysEarned)>before){await ctx.refreshMe();if(!disposed)feedback.textContent=`Você ganhou ${Number(data.daysEarned)-before} dias de bônus! O benefício foi registrado na sua conta.`;}
       else if(manual)feedback.textContent='Indicações atualizadas.';
       const input=root.querySelector('#referral-url');
       if(data.eligible && data.code && input && !input.value){input.value=referralLink(data.code);root.querySelector('[data-referral-link]').hidden=false;root.querySelector('[data-generate-referral]').hidden=true;}

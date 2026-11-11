@@ -1,4 +1,4 @@
-import { api, esc, icon, initials, toast } from './lib.js?v=69eeb26e4b0b';
+import { api, esc, icon, initials, toast } from './lib.js?v=246ead84eab0';
 
 const date = value => value ? new Date(value).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' }) : 'Não informado';
 const statuses = { active:'Ativa', pending:'Pendente', canceled:'Cancelada', refunded:'Reembolsada', expired:'Expirada', chargeback:'Contestada' };
