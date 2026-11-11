@@ -252,8 +252,6 @@ a.chip:hover { color: var(--text); border-color: var(--line-strong); }
 .account-promos { margin-block:26px 14px; }
 .promo-heading { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px; }
 .promo-heading>span { color:var(--muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em; }
-.promo-request-shortcut { display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:8px 12px;border:1px solid rgba(233,185,73,.4);border-radius:999px;color:var(--gold-light);font-size:13px;font-weight:700;background:rgba(233,185,73,.08); }
-.promo-request-shortcut svg { width:17px;height:17px;flex:none; }
 .promo-slides { border-radius:18px;box-shadow:0 8px 30px rgba(179,18,31,.13); }
 .promo-slide { position:relative;display:flex;align-items:center;gap:22px;min-width:0;min-height:224px;padding:22px 20px;border:1px solid rgba(255,255,255,.14);border-radius:18px;color:#fff5ed;background:linear-gradient(110deg,#621321,#aa2431 62%,#784321);touch-action:pan-y; }
 .promo-slide[hidden] { display:none; }

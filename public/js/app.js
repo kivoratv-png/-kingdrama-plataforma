@@ -1,15 +1,15 @@
 // Roteador, estado da sessão e layout.
-import { api, esc, icon, initials, enhance } from './lib.js?v=040e637f9962';
-import * as pages from './pages.js?v=040e637f9962';
-import * as authPages from './auth-pages.js?v=040e637f9962';
-import { dashboard } from './admin.js?v=040e637f9962';
-import { clearActivity, sendActivity } from './activity.js?v=040e637f9962';
-import { privacy } from './privacy.js?v=040e637f9962';
-import { profile } from './profile.js?v=040e637f9962';
-import { requests } from './requests.js?v=040e637f9962';
-import { offers, offerPath } from './offers.js?v=040e637f9962';
-import { referrals } from './referrals.js?v=040e637f9962';
-import { mountCategoryMenu } from './category-menu.js?v=040e637f9962';
+import { api, esc, icon, initials, enhance } from './lib.js?v=75ad0bb5f98f';
+import * as pages from './pages.js?v=75ad0bb5f98f';
+import * as authPages from './auth-pages.js?v=75ad0bb5f98f';
+import { dashboard } from './admin.js?v=75ad0bb5f98f';
+import { clearActivity, sendActivity } from './activity.js?v=75ad0bb5f98f';
+import { privacy } from './privacy.js?v=75ad0bb5f98f';
+import { profile } from './profile.js?v=75ad0bb5f98f';
+import { requests } from './requests.js?v=75ad0bb5f98f';
+import { offers, offerPath } from './offers.js?v=75ad0bb5f98f';
+import { referrals } from './referrals.js?v=75ad0bb5f98f';
+import { mountCategoryMenu } from './category-menu.js?v=75ad0bb5f98f';
 
 export const state = { me: null, site: null };
 const app = document.getElementById('app');
@@ -173,7 +173,7 @@ function shell(html, route) {
       <a href="/inicio" ${cur('inicio')}>Início</a>
       <button type="button" class="category-toggle" data-category-toggle aria-expanded="false" aria-controls="category-menu-panel" ${tab==='categorias'?'data-category-active':''}>Categorias ${icon.chev}</button>
       <a href="/favoritos" ${cur('lista')}>Favoritos</a>
-      <a href="/pedidos" ${cur('pedidos')}>Pedir</a>
+      <a href="/pedidos" ${cur('pedidos')}>Pedir Dorama</a>
     </nav>
     <div class="spacer"></div>
     <form class="top-search" role="search" action="/buscar">
@@ -202,7 +202,7 @@ function shell(html, route) {
     <a href="/buscar" ${cur('buscar')}>${icon.search}<span>Buscar</span></a>
     <button type="button" class="category-toggle" data-category-toggle aria-expanded="false" aria-controls="category-menu-panel" ${tab==='categorias'?'data-category-active':''}>${icon.grid}<span>Categorias</span></button>
     <a href="/favoritos" ${cur('lista')}>${icon.heart}<span>Favoritos</span></a>
-    <a href="/pedidos" ${cur('pedidos')}>${icon.request}<span>Pedir</span></a>
+    <a href="/pedidos" ${cur('pedidos')}>${icon.request}<span>Pedir Dorama</span></a>
     <a href="/perfil" ${cur('perfil')}>${icon.user}<span>Perfil</span></a>
   </nav><nav id="category-menu-panel" class="category-menu-panel" data-category-panel aria-label="Escolher categoria" hidden></nav>${supportButton()}`;
   enhance(app);

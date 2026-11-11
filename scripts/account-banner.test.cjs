@@ -20,7 +20,7 @@ test('messages link to requests, the supplied WhatsApp and referrals with exactl
  const {context}=setup();const html=context.accountBanner(false);
  assert.ok(html.includes('href="/pedidos"'));assert.ok(html.includes('href="/indicacoes"'));assert.ok(html.includes('https://wa.me/5551920048910?'));
  assert.ok(html.includes('você ganha 10 dias'));assert.ok(!html.includes('15 dias'));
- assert.ok(html.includes('promo-request-shortcut'));assert.ok(!context.accountBanner(true).includes('promo-request-shortcut'));
+ assert.ok(!html.includes('promo-request-shortcut'));
  assert.ok(!html.includes('href="/admin"'));
 });
 test('automatic rotation cycles every five seconds with no manual navigation controls',()=>{
