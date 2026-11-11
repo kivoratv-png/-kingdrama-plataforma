@@ -6,40 +6,16 @@
 #   connect-src 'self' https://SEU-PROJETO.supabase.co
 #   media-src   'self' blob: https://vz-XXXX.b-cdn.net
 /*
+  Cache-Control: no-store
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=()
   Content-Security-Policy: default-src 'self'; img-src 'self' data: blob: https://yvwdhuphzyjfhfsqdeho.supabase.co; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self' blob:; connect-src 'self' https://yvwdhuphzyjfhfsqdeho.supabase.co; frame-src https://player.mediadelivery.net; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
 
-# Cache: os arquivos abaixo NÃO têm hash no nome (app.js é sempre app.js), então
-# cache longo faria o visitante continuar vendo a versão antiga depois de publicar.
-# Com must-revalidate o navegador pergunta "mudou?" a cada visita e recebe 304
-# quando não mudou — barato, e a atualização chega na hora.
-/js/*
-  Cache-Control: public, max-age=0, must-revalidate
-
-/css/*
-  Cache-Control: public, max-age=0, must-revalidate
-
-/config/*
-  Cache-Control: public, max-age=0, must-revalidate
-
-/index.html
-  Cache-Control: public, max-age=0, must-revalidate
+# Todas as rotas da SPA e os arquivos são buscados na rede a cada carregamento.
+# A sessão de login usa armazenamento separado e não é apagada.
 
 /admin
-  Cache-Control: private, no-store
   Referrer-Policy: no-referrer
   X-Robots-Tag: noindex, nofollow
-
-# Imagens: trocam pouco, mas ainda revalidam em 1 hora.
-/banners/*
-  Cache-Control: public, max-age=3600, must-revalidate
-
-/img/*
-  Cache-Control: public, max-age=86400, must-revalidate
-
-# Biblioteca de terceiros, trocada só ao atualizar a versão.
-/vendor/*
-  Cache-Control: public, max-age=604800

@@ -1,5 +1,5 @@
-import { esc } from './lib.js';
-import { mountAdminRequests } from './admin-requests.js';
+import { esc } from './lib.js?v=86226756385f';
+import { mountAdminRequests } from './admin-requests.js?v=86226756385f';
 
 const client = window.__KD_SB__;
 let status;

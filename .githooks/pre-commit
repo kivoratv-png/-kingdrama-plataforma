@@ -12,6 +12,10 @@
 #
 # A versão é o resumo do conteúdo de public/js, public/css e index.html, então
 # commits que não mexem no site não geram ruído.
-node scripts/gera-versao.js || exit 0
-git add public/config/versao.json 2>/dev/null
+if ! git diff --quiet -- public/index.html public/js; then
+  echo "Inclua as alterações de public/index.html e public/js antes de gerar a versão."
+  exit 1
+fi
+node scripts/gera-versao.js || exit 1
+git add public/config/versao.json public/index.html public/js || exit 1
 exit 0

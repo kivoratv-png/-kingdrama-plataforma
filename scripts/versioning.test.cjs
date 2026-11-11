@@ -1,0 +1,31 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { generateVersion } = require('./gera-versao');
+
+test('versions the complete module graph and remains stable across repeated runs', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kingdrama-version-'));
+  for (const directory of ['js','css','config','vendor']) fs.mkdirSync(path.join(root,directory));
+  fs.writeFileSync(path.join(root,'index.html'), '<meta name="kingdrama-version" content="development"><link href="/css/app.css"><script src="/js/app.js"></script><link href="/js/lib.js">');
+  fs.writeFileSync(path.join(root,'js/app.js'), 'import { a } from "./lib.js"; import("./page.js"); const hls="/vendor/hls.min.js";');
+  fs.writeFileSync(path.join(root,'js/lib.js'), 'import "./app.js";export const a=1;');
+  fs.writeFileSync(path.join(root,'js/page.js'), 'export const page=1;');
+  fs.writeFileSync(path.join(root,'css/app.css'), 'body{margin:0}');
+  fs.writeFileSync(path.join(root,'config/auth.json'), '{"enabled":false}');
+  fs.writeFileSync(path.join(root,'vendor/hls.min.js'), 'window.Hls={};');
+  const first=generateVersion(root), manifest=fs.readFileSync(path.join(root,'config/versao.json'),'utf8');
+  const html=fs.readFileSync(path.join(root,'index.html'),'utf8'), app=fs.readFileSync(path.join(root,'js/app.js'),'utf8');
+  assert.ok(html.includes(`/css/app.css?v=${first.version}`));
+  assert.ok(html.includes(`content="${first.version}"`));
+  for (const url of ['./lib.js','./page.js','/vendor/hls.min.js']) assert.ok(app.includes(`${url}?v=${first.version}`));
+  assert.ok(fs.readFileSync(path.join(root,'js/lib.js'),'utf8').includes(`./app.js?v=${first.version}`));
+  const repeated=generateVersion(root);assert.equal(repeated.version,first.version);assert.equal(repeated.rewritten,0);assert.equal(repeated.changed,false);
+  assert.equal(fs.readFileSync(path.join(root,'config/versao.json'),'utf8'),manifest);
+  fs.writeFileSync(path.join(root,'config/auth.json'), '{"enabled":true}');
+  const configChange=generateVersion(root);assert.notEqual(configChange.version,first.version);
+  fs.appendFileSync(path.join(root,'css/app.css'), '\nbody{color:white}');
+  const cssChange=generateVersion(root);assert.notEqual(cssChange.version,configChange.version);
+  assert.equal(generateVersion(root).version,cssChange.version);
+});

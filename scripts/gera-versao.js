@@ -25,40 +25,50 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 
-const raiz = path.join(__dirname, '..', 'public');
-const destino = path.join(raiz, 'config', 'versao.json');
+function normalize(text) {
+  return text.replace(/\r\n/g, '\n')
+    .replace(/\?v=[a-f0-9]{12}(?=['"])/g, '')
+    .replace(/(<meta name="kingdrama-version" content=")[^"]*(">)/g, '$1development$2');
+}
 
-// O que o navegador executa. index.html entra porque é ele que lista os
-// scripts; versao.json fica de fora, senão o resumo mudaria a cada geração.
-const alvos = ['js', 'css'];
-const arquivos = [path.join(raiz, 'index.html')];
-
-for (const pasta of alvos) {
-  const dir = path.join(raiz, pasta);
-  if (!fs.existsSync(dir)) continue;
-  for (const nome of fs.readdirSync(dir).sort()) {
-    const completo = path.join(dir, nome);
-    if (fs.statSync(completo).isFile()) arquivos.push(completo);
+function generateVersion(root) {
+  const files = ['index.html', '_headers', '_redirects', 'manifest.webmanifest']
+    .map(name => path.join(root, name)).filter(file => fs.existsSync(file));
+  for (const folder of ['js', 'css', 'config', 'vendor']) {
+    const directory = path.join(root, folder);
+    if (!fs.existsSync(directory)) continue;
+    for (const name of fs.readdirSync(directory).sort()) {
+      const file = path.join(directory, name);
+      if (fs.statSync(file).isFile() && !(folder === 'config' && name === 'versao.json')) files.push(file);
+    }
   }
+  const hash = crypto.createHash('sha256');
+  for (const file of files.sort()) {
+    hash.update(path.relative(root, file).replace(/\\/g, '/'));
+    hash.update(normalize(fs.readFileSync(file, 'utf8')));
+  }
+  const version = hash.digest('hex').slice(0, 12);
+  const rewritten = [];
+  // Include transitive imports and the on-demand HLS script in this release.
+  for (const file of files.filter(file => file === path.join(root, 'index.html') || path.dirname(file) === path.join(root, 'js'))) {
+    const before = fs.readFileSync(file, 'utf8');
+    const after = normalize(before)
+      .replace(/(['"])((?:\.{1,2}\/|\/)[^'"\s?]+\.(?:js|css))\1/g, (_, quote, url) => `${quote}${url}?v=${version}${quote}`)
+      .replace(/(<meta name="kingdrama-version" content=")development(">)/g, `$1${version}$2`);
+    if (before !== after) { fs.writeFileSync(file, after); rewritten.push(file); }
+  }
+  const destination = path.join(root, 'config', 'versao.json');
+  let previous;
+  try { previous = JSON.parse(fs.readFileSync(destination, 'utf8')).versao; } catch { /* First release. */ }
+  if (previous !== version) {
+    fs.mkdirSync(path.dirname(destination), { recursive: true });
+    fs.writeFileSync(destination, JSON.stringify({ versao: version, publicado: new Date().toISOString() }, null, 2) + '\n');
+  }
+  return { version, changed: previous !== version, rewritten: rewritten.length };
 }
 
-const resumo = crypto.createHash('sha256');
-for (const arquivo of arquivos.sort()) {
-  resumo.update(path.relative(raiz, arquivo).replace(/\\/g, '/'));
-  resumo.update(fs.readFileSync(arquivo));
-}
-const versao = resumo.digest('hex').slice(0, 12);
-
-let anterior = null;
-try { anterior = JSON.parse(fs.readFileSync(destino, 'utf8')).versao; } catch { /* primeira vez */ }
-
-if (anterior === versao) {
-  console.log('versao inalterada:', versao, `(${arquivos.length} arquivos)`);
-} else {
-  fs.mkdirSync(path.dirname(destino), { recursive: true });
-  fs.writeFileSync(
-    destino,
-    JSON.stringify({ versao, publicado: new Date().toISOString() }, null, 2) + '\n'
-  );
-  console.log(`versao: ${anterior || '(nenhuma)'} -> ${versao}  (${arquivos.length} arquivos)`);
+module.exports = { generateVersion };
+if (require.main === module) {
+  const result = generateVersion(path.join(__dirname, '..', 'public'));
+  console.log(`${result.changed ? 'versão gerada' : 'versão inalterada'}: ${result.version} (${result.rewritten} arquivos atualizados)`);
 }

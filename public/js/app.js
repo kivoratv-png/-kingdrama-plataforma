@@ -1,12 +1,12 @@
 // Roteador, estado da sessão e layout.
-import { api, esc, icon, initials, enhance } from './lib.js';
-import * as pages from './pages.js';
-import * as authPages from './auth-pages.js';
-import { dashboard } from './admin.js';
-import { clearActivity, sendActivity } from './activity.js';
-import { privacy } from './privacy.js';
-import { profile } from './profile.js';
-import { requests } from './requests.js';
+import { api, esc, icon, initials, enhance } from './lib.js?v=86226756385f';
+import * as pages from './pages.js?v=86226756385f';
+import * as authPages from './auth-pages.js?v=86226756385f';
+import { dashboard } from './admin.js?v=86226756385f';
+import { clearActivity, sendActivity } from './activity.js?v=86226756385f';
+import { privacy } from './privacy.js?v=86226756385f';
+import { profile } from './profile.js?v=86226756385f';
+import { requests } from './requests.js?v=86226756385f';
 
 export const state = { me: null, site: null };
 const app = document.getElementById('app');
@@ -53,12 +53,12 @@ export const isActive = () => Boolean(state.me?.user && state.me.access?.active)
 // verdade. Esperar o clique é de propósito: a pessoa já estava saindo
 // daquela tela, então nada do que ela digitou se perde — bem diferente de
 // recarregar por baixo dela no meio de um formulário.
-let versaoDaAba = null;
+let versaoDaAba = new URL(import.meta.url).searchParams.get('v') || document.querySelector('meta[name="kingdrama-version"]')?.content || null;
 let saiuVersaoNova = false;
 let ultimaConferida = 0;
 
-async function confereVersao() {
-  if (saiuVersaoNova || Date.now() - ultimaConferida < 60000) return;
+async function confereVersao(forcar = false) {
+  if (saiuVersaoNova || (!forcar && Date.now() - ultimaConferida < 60000)) return;
   ultimaConferida = Date.now();
   let publicada = null;
   try {
@@ -71,7 +71,8 @@ async function confereVersao() {
 }
 
 // Voltar para uma aba esquecida é justamente quando ela tende a estar velha.
-document.addEventListener('visibilitychange', () => { if (!document.hidden) confereVersao(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) confereVersao(true); });
+window.addEventListener('pageshow', () => confereVersao(true));
 
 export function navigate(to, { replace = false } = {}) {
   // Saiu versão nova enquanto esta aba estava aberta: carrega de verdade, em
@@ -236,6 +237,20 @@ window.addEventListener('popstate', render);
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
 (async function boot() {
+  await confereVersao(true);
+  if (saiuVersaoNova) {
+    // A versioned navigation also bypasses an HTML response cached before this release.
+    const target = new URL(location.href);
+    const published = await fetch('/config/versao.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
+    if (published?.versao && target.searchParams.get('_kdv') !== published.versao) {
+      target.searchParams.set('_kdv', published.versao);
+      location.replace(target.href);
+      return;
+    }
+  } else if (new URL(location.href).searchParams.has('_kdv')) {
+    const clean = new URL(location.href); clean.searchParams.delete('_kdv');
+    history.replaceState(history.state, '', clean.pathname + clean.search + clean.hash);
+  }
   try {
     [state.site] = await Promise.all([api('/api/site'), refreshMe()]);
   } catch {
