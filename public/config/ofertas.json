@@ -6,11 +6,14 @@
       "productId": "g18z8v",
       "available": true,
       "priceCents": 1499,
-      "period": { "days": 7 },
+      "period": {
+        "days": 7
+      },
       "durationLabel": "7 dias de acesso",
       "pricePeriod": "pela semana completa",
       "tagline": "Uma semana de novas histórias",
-      "description": "Uma opção curta para conhecer o KingDrama e escolher sua próxima maratona."
+      "description": "Uma opção curta para conhecer o KingDrama e escolher sua próxima maratona.",
+      "deviceLimit": 1
     },
     {
       "code": "monthly",
@@ -18,12 +21,15 @@
       "productId": "P3QfUF",
       "available": true,
       "priceCents": 2490,
-      "period": { "months": 1 },
+      "period": {
+        "months": 1
+      },
       "durationLabel": "1 mês de acesso",
       "pricePeriod": "pelo mês completo",
       "tagline": "Doramas na sua rotina",
       "description": "Para reservar um momento do seu dia às histórias que você gosta.",
-      "featured": true
+      "featured": true,
+      "deviceLimit": 1
     },
     {
       "code": "quarterly",
@@ -31,11 +37,14 @@
       "productId": "ZPO7Gw",
       "available": true,
       "priceCents": 7990,
-      "period": { "months": 3 },
+      "period": {
+        "months": 3
+      },
       "durationLabel": "3 meses de acesso",
       "pricePeriod": "pelos 3 meses completos",
       "tagline": "Mais tempo para maratonar",
-      "description": "Três meses para descobrir novos títulos e acompanhar suas próximas histórias."
+      "description": "Três meses para descobrir novos títulos e acompanhar suas próximas histórias.",
+      "deviceLimit": 3
     },
     {
       "code": "semiannual",
@@ -43,17 +52,19 @@
       "productId": "LD4imo",
       "available": true,
       "priceCents": 12990,
-      "period": { "months": 6 },
+      "period": {
+        "months": 6
+      },
       "durationLabel": "6 meses de acesso",
       "pricePeriod": "pelos 6 meses completos",
       "tagline": "Um semestre de KingDrama",
-      "description": "Um período maior para aproveitar o catálogo e encontrar novos favoritos."
+      "description": "Um período maior para aproveitar o catálogo e encontrar novos favoritos.",
+      "deviceLimit": 3
     }
   ],
   "features": [
     "Episódios liberados do catálogo KingDrama",
     "Assista pelo site ou app, no celular ou computador",
-    "1 dispositivo conectado por vez",
     "Indique amigos e ganhe 10 dias por indicação válida"
   ]
 }

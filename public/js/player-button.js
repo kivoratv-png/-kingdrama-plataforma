@@ -1,9 +1,9 @@
-import { icon } from './lib.js?v=b202261b30d2';
+import { icon } from './lib.js?v=2b974c99d6e0';
 let library;
 export function loadPlayerControl(){
  if(window.playerjs)return Promise.resolve(window.playerjs.Player);
  library ||= new Promise((resolve,reject)=>{
-  const script=Object.assign(document.createElement('script'),{src:'/vendor/playerjs.min.js?v=b202261b30d2',async:true});
+  const script=Object.assign(document.createElement('script'),{src:'/vendor/playerjs.min.js?v=2b974c99d6e0',async:true});
   script.onload=()=>resolve(window.playerjs.Player);script.onerror=()=>{library=null;reject(Error('Não foi possível carregar o controle do vídeo.'));};document.head.append(script);
  });
  return library;

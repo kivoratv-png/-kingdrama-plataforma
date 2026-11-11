@@ -1,14 +1,14 @@
 // Roteador, estado da sessão e layout.
-import { api, esc, icon, initials, enhance } from './lib.js?v=b202261b30d2';
-import * as pages from './pages.js?v=b202261b30d2';
-import * as authPages from './auth-pages.js?v=b202261b30d2';
-import { clearActivity, sendActivity } from './activity.js?v=b202261b30d2';
-import { privacy } from './privacy.js?v=b202261b30d2';
-import { profile } from './profile.js?v=b202261b30d2';
-import { requests } from './requests.js?v=b202261b30d2';
-import { offers, offerPath } from './offers.js?v=b202261b30d2';
-import { referrals } from './referrals.js?v=b202261b30d2';
-import { mountCategoryMenu } from './category-menu.js?v=b202261b30d2';
+import { api, esc, icon, initials, enhance } from './lib.js?v=2b974c99d6e0';
+import * as pages from './pages.js?v=2b974c99d6e0';
+import * as authPages from './auth-pages.js?v=2b974c99d6e0';
+import { clearActivity, sendActivity } from './activity.js?v=2b974c99d6e0';
+import { privacy } from './privacy.js?v=2b974c99d6e0';
+import { profile } from './profile.js?v=2b974c99d6e0';
+import { requests, mountRequestsPanel } from './requests.js?v=2b974c99d6e0';
+import { offers, offerPath } from './offers.js?v=2b974c99d6e0';
+import { referrals } from './referrals.js?v=2b974c99d6e0';
+import { mountCategoryMenu } from './category-menu.js?v=2b974c99d6e0';
 
 export const state = { me: null, site: null };
 const app = document.getElementById('app');
@@ -93,6 +93,7 @@ export function navigate(to, { replace = false } = {}) {
 let renderSeq = 0;
 let unmountCurrent = null; // limpeza da página anterior (ex.: parar o player HLS)
 let unmountCategoryMenu = null;
+let requestsPanel=null;
 export async function render() {
   confereVersao(); // sem await: não atrasa a tela, só marca para a próxima
   const seq = ++renderSeq;
@@ -100,6 +101,7 @@ export async function render() {
   unmountCurrent = null;
   const path = location.pathname.replace(/\/+$/, '') || '/';
   const route = routes.find((r) => r.re.test(path));
+  if(path==='/pedidos' && state.me?.user)return navigate('/inicio?pedidos=1',{replace:true});
   const me = state.me;
   const logged = Boolean(me?.user);
 
@@ -139,6 +141,7 @@ export async function render() {
   const cleanup = route.page.mount?.(main, ctx);
   if (typeof cleanup === 'function') unmountCurrent = cleanup;
   restoreScroll();
+  if(ctx.query.get('pedidos')==='1' && requestsPanel){requestsPanel.open();const clean=new URL(location.href);clean.searchParams.delete('pedidos');history.replaceState(history.state,'',clean.pathname+clean.search);}
   sendActivity();
 }
 
@@ -155,6 +158,7 @@ function supportButton(bare = false) {
 
 function shellBare(html) {
   unmountCategoryMenu?.();unmountCategoryMenu=null;
+  requestsPanel?.dispose();requestsPanel=null;
   const showSupport=!/^\/assistir\//.test(location.pathname);
   app.innerHTML = `<main id="main" class="no-tabbar ${showSupport?'with-support':''}">${html}</main>${showSupport?supportButton(true):''}`;
   enhance(app);
@@ -162,6 +166,7 @@ function shellBare(html) {
 
 function shell(html, route) {
   unmountCategoryMenu?.();unmountCategoryMenu=null;
+  requestsPanel?.dispose();requestsPanel=null;
   const u = state.me?.user;
   const tab = route.tab;
   const cur = (t) => (tab === t ? 'aria-current="page"' : '');
@@ -172,7 +177,7 @@ function shell(html, route) {
       <a href="/inicio" ${cur('inicio')}>Início</a>
       <button type="button" class="category-toggle" data-category-toggle aria-expanded="false" aria-controls="category-menu-panel" ${tab==='categorias'?'data-category-active':''}>Categorias ${icon.chev}</button>
       <a href="/favoritos" ${cur('lista')}>Favoritos</a>
-      <a href="/pedidos" ${cur('pedidos')}>Pedir Dorama</a>
+      <button type="button" class="category-toggle" data-requests-toggle aria-haspopup="dialog">Pedir Dorama</button>
     </nav>
     <div class="spacer"></div>
     <form class="top-search" role="search" action="/buscar">
@@ -189,7 +194,6 @@ function shell(html, route) {
         <a role="menuitem" href="/historico">${icon.clock} Histórico</a>
         <a role="menuitem" href="/perfil">${icon.user} Perfil e assinatura</a>
         <a role="menuitem" href="/indicacoes">${icon.gift} Indique e ganhe dias grátis</a>
-        ${u?.isAdmin?'':`<a role="menuitem" href="/pedidos">${icon.request} Pedir doramas / Meus pedidos</a>`}
         <a role="menuitem" href="/perfil">${icon.lock} Excluir conta</a>
         <button role="menuitem" type="button" class="danger" data-logout>${icon.logout} Sair</button>
       </div>
@@ -201,11 +205,12 @@ function shell(html, route) {
     <a href="/buscar" ${cur('buscar')}>${icon.search}<span>Buscar</span></a>
     <button type="button" class="category-toggle" data-category-toggle aria-expanded="false" aria-controls="category-menu-panel" ${tab==='categorias'?'data-category-active':''}>${icon.grid}<span>Categorias</span></button>
     <a href="/favoritos" ${cur('lista')}>${icon.heart}<span>Favoritos</span></a>
-    <a href="/pedidos" ${cur('pedidos')}>${icon.request}<span>Pedir Dorama</span></a>
+    <button type="button" class="category-toggle" data-requests-toggle aria-haspopup="dialog">${icon.request}<span>Pedir Dorama</span></button>
     <a href="/perfil" ${cur('perfil')}>${icon.user}<span>Perfil</span></a>
   </nav><nav id="category-menu-panel" class="category-menu-panel" data-category-panel aria-label="Escolher categoria" hidden></nav>${supportButton()}`;
   enhance(app);
   unmountCategoryMenu=mountCategoryMenu(app);
+  requestsPanel=mountRequestsPanel(app,{state,navigate});
 
   const menu = app.querySelector('.user-menu');
   const btn = menu.querySelector('button'), pop = menu.querySelector('.menu-pop');
@@ -243,6 +248,7 @@ document.addEventListener('click', async (e) => {
   const url = new URL(a.href, location.href);
   if (url.origin !== location.origin || url.pathname.startsWith('/dev/') || url.pathname.startsWith('/api/')) return;
   e.preventDefault();
+  if(url.pathname==='/pedidos' && requestsPanel){requestsPanel.open();return;}
   navigate(url.pathname + url.search);
 });
 

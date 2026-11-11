@@ -1,4 +1,4 @@
-import { api, esc, icon } from './lib.js?v=b202261b30d2';
+import { api, esc, icon } from './lib.js?v=2b974c99d6e0';
 
 export function offerPath(path) {
   const match = path.match(/^\/assistir\/([\w-]+)\/(\d+)$/);
@@ -42,7 +42,7 @@ export async function offers(ctx) {
           <h2>${esc(plan.name)}</h2><p class="offer-tagline">${esc(plan.tagline)}</p>
           <div class="offer-price">${price ? `<strong>${esc(price)}</strong><span>à vista · ${esc(plan.pricePeriod)}</span>` : `<strong class="offer-price-pending">${available ? 'Valor no checkout' : 'Valor em breve'}</strong><span>${esc(plan.pricePeriod)}</span>`}</div>
           <p class="offer-description">${esc(plan.description)}</p>
-          <ul class="offer-benefits">${config.features.map(feature => `<li>${icon.check}<span>${esc(feature)}</span></li>`).join('')}</ul>
+          <ul class="offer-benefits">${[...config.features,plan.deviceLimit===3?'Até 3 dispositivos conectados ao mesmo tempo':'1 dispositivo conectado por vez'].map(feature => `<li>${icon.check}<span>${esc(feature)}</span></li>`).join('')}</ul>
           ${available ? `<a class="btn ${plan.featured ? 'btn-primary' : 'btn-ghost'} btn-block" href="${esc(url)}" target="_blank" rel="noopener noreferrer" data-offer-checkout="${esc(plan.code)}" data-product-id="${esc(plan.productId)}" aria-label="Assinar ${esc(plan.name)} no checkout da Lowify, abre em outra aba">Assinar ${esc(plan.name.replace(/^Plano /,''))} ${icon.next}</a><p class="offer-checkout-note">Pagamento no checkout da Lowify</p>` : '<button class="btn btn-ghost btn-block" type="button" disabled>Indisponível no momento</button><p class="offer-checkout-note">Esta oferta estará disponível em breve.</p>'}
         </article>`;
       }).join('')}</section>

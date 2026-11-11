@@ -20,7 +20,7 @@ async function startup({loaded,published,url='https://kingdrama.test/',me={user:
     history:{state:null,replaceState:(_,unused,to)=>{cleaned.push(to);if(to){const target=new URL(to,context.location.href);Object.assign(context.location,{href:target.href,pathname:target.pathname,search:target.search});}}},
     pages:{landing:async()=>'<p>Home</p>',home:async()=>'<p>Catalog</p>',title:async()=>'<p>Title details</p>',player:async()=>'<p>Player</p>'},authPages:{},profile:()=>'',privacy:()=>'',requests:()=>'',referrals:()=>'',dashboard:()=>'',
     esc:value=>String(value || ''),icon:new Proxy({},{get:()=>''}),initials:()=> 'T',
-    enhance:()=>{},sendActivity:()=>{},clearActivity:()=>{},mountCategoryMenu:()=>{},
+    enhance:()=>{},sendActivity:()=>{},clearActivity:()=>{},mountCategoryMenu:()=>{},mountRequestsPanel:()=>({open:()=>{},dispose:()=>{}}),
     fetch:async(route,options)=>{requests.push({path:route,options});return {ok:true,json:async()=>route==='/config/ofertas.json'?JSON.parse(fs.readFileSync(path.join(__dirname,'../public/config/ofertas.json'),'utf8')):({versao:published})};},
     api:async path=>path==='/api/me'?me:{},
   };
