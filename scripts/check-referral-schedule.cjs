@@ -1,0 +1,13 @@
+'use strict';
+const fs=require('node:fs');const path=require('node:path');const {execFileSync}=require('node:child_process');
+const root=path.join(process.env.APPDATA || '','npm/node_modules/netlify-cli');
+const cli=path.join(root,'bin/run.js');
+const schema=JSON.parse(fs.readFileSync(path.join(root,'node_modules/@netlify/open-api/dist/swagger.json'),'utf8'));
+const operation=Object.entries(schema.paths).find(([route,definition])=>route==='/sites/{site_id}/functions' && definition.get)?.[1].get.operationId;
+if(!operation)throw Error('Consulta de funções não encontrada no CLI.');
+const result=JSON.parse(execFileSync(process.execPath,[cli,'api',operation,'--data',JSON.stringify({site_id:'64602424-43b8-4b82-97d2-b55c6eef673b'})],{cwd:path.join(__dirname,'..'),encoding:'utf8',timeout:30000,maxBuffer:4*1024*1024}));
+const functions=Array.isArray(result)?result:result.functions;
+const job=functions?.find(item=>(item.name || item.n)==='referrals-retry');
+if(!job)throw Error('Função de recuperação não encontrada na publicação.');
+if(job.schedule!=='*/5 * * * *')throw Error('Agendamento de cinco minutos não confirmado.');
+console.log(JSON.stringify({name:job.name || job.n,schedule:job.schedule}));
