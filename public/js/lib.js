@@ -27,6 +27,7 @@ export async function api(path, { method = 'GET', body } = {}) {
 
 const svg = (d, extra = '') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${d}</svg>`;
 export const icon = {
+  whatsapp: svg('<path d="M21 11.5a9 9 0 0 1-13.4 7.9L3 21l1.6-4.6A9 9 0 1 1 21 11.5Z"/><path d="m9 7-1.2.6c-.9 2.4 3 6.3 5.7 6.9l1.3-1.3-2-1-1 .8a7 7 0 0 1-2.8-2.8l.8-1L9 7Z"/>'),
   gift: svg('<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v9h14v-9M12 8v13"/><path d="M12 8H8a3 3 0 1 1 3-3l1 3ZM12 8h4a3 3 0 1 0-3-3l-1 3Z"/>'),
   request: svg('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h5M12 15v4M10 17h4"/>'),
   home: svg('<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/>'),

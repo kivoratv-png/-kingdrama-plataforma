@@ -1,15 +1,15 @@
 // Roteador, estado da sessão e layout.
-import { api, esc, icon, initials, enhance } from './lib.js?v=bee0a3ccd446';
-import * as pages from './pages.js?v=bee0a3ccd446';
-import * as authPages from './auth-pages.js?v=bee0a3ccd446';
-import { dashboard } from './admin.js?v=bee0a3ccd446';
-import { clearActivity, sendActivity } from './activity.js?v=bee0a3ccd446';
-import { privacy } from './privacy.js?v=bee0a3ccd446';
-import { profile } from './profile.js?v=bee0a3ccd446';
-import { requests } from './requests.js?v=bee0a3ccd446';
-import { offers, offerPath } from './offers.js?v=bee0a3ccd446';
-import { referrals } from './referrals.js?v=bee0a3ccd446';
-import { mountCategoryMenu } from './category-menu.js?v=bee0a3ccd446';
+import { api, esc, icon, initials, enhance } from './lib.js?v=040e637f9962';
+import * as pages from './pages.js?v=040e637f9962';
+import * as authPages from './auth-pages.js?v=040e637f9962';
+import { dashboard } from './admin.js?v=040e637f9962';
+import { clearActivity, sendActivity } from './activity.js?v=040e637f9962';
+import { privacy } from './privacy.js?v=040e637f9962';
+import { profile } from './profile.js?v=040e637f9962';
+import { requests } from './requests.js?v=040e637f9962';
+import { offers, offerPath } from './offers.js?v=040e637f9962';
+import { referrals } from './referrals.js?v=040e637f9962';
+import { mountCategoryMenu } from './category-menu.js?v=040e637f9962';
 
 export const state = { me: null, site: null };
 const app = document.getElementById('app');
@@ -150,9 +150,14 @@ function restoreScroll() {
 
 function sessionStorageSet(k, v) { try { sessionStorage.setItem(k, v); } catch { /* indisponível */ } }
 
+function supportButton(bare = false) {
+  return `<a class="support-whatsapp ${bare?'support-whatsapp-bare':''}" href="https://wa.me/5551920048910?text=${encodeURIComponent('Olá! Preciso de ajuda com o KINGDRAMA.')}" target="_blank" rel="noopener noreferrer" aria-label="Falar com o suporte KINGDRAMA no WhatsApp, abre em outra aba" title="Suporte KINGDRAMA · (51) 92004-8910">${icon.whatsapp}<span>Suporte</span></a>`;
+}
+
 function shellBare(html) {
   unmountCategoryMenu?.();unmountCategoryMenu=null;
-  app.innerHTML = `<main id="main" class="no-tabbar">${html}</main>`;
+  const showSupport=!/^\/assistir\//.test(location.pathname);
+  app.innerHTML = `<main id="main" class="no-tabbar ${showSupport?'with-support':''}">${html}</main>${showSupport?supportButton(true):''}`;
   enhance(app);
 }
 
@@ -191,7 +196,7 @@ function shell(html, route) {
       </div>
     </div>
   </header>
-  <main id="main" tabindex="-1">${html}</main>
+  <main id="main" class="with-support" tabindex="-1">${html}</main>
   <nav class="tabbar with-requests" aria-label="Navegação">
     <a href="/inicio" ${cur('inicio')}>${icon.home}<span>Início</span></a>
     <a href="/buscar" ${cur('buscar')}>${icon.search}<span>Buscar</span></a>
@@ -199,7 +204,7 @@ function shell(html, route) {
     <a href="/favoritos" ${cur('lista')}>${icon.heart}<span>Favoritos</span></a>
     <a href="/pedidos" ${cur('pedidos')}>${icon.request}<span>Pedir</span></a>
     <a href="/perfil" ${cur('perfil')}>${icon.user}<span>Perfil</span></a>
-  </nav><nav id="category-menu-panel" class="category-menu-panel" data-category-panel aria-label="Escolher categoria" hidden></nav>`;
+  </nav><nav id="category-menu-panel" class="category-menu-panel" data-category-panel aria-label="Escolher categoria" hidden></nav>${supportButton()}`;
   enhance(app);
   unmountCategoryMenu=mountCategoryMenu(app);
 

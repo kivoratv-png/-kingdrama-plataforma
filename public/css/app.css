@@ -141,6 +141,12 @@ button { cursor: pointer; }
 
 main { display: block; padding-bottom: calc(var(--tabbar-h) + var(--safe-b) + 28px); min-height: calc(100dvh - var(--topbar-h)); }
 main.no-tabbar { padding-bottom: 32px; }
+.support-whatsapp { position:fixed;z-index:45;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(var(--tabbar-h) + var(--safe-b) + 16px);display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;max-width:calc(100vw - 32px);padding:12px 17px;border:1px solid rgba(233,185,73,.45);border-radius:999px;background:#075e54;color:#fff;font-size:14px;font-weight:700;box-shadow:0 5px 20px rgba(0,0,0,.4); }
+.support-whatsapp svg { width:25px;height:25px;flex:none; }
+.support-whatsapp:hover { background:#087567; }
+.support-whatsapp-bare { bottom:calc(var(--safe-b) + 16px); }
+main.with-support { padding-bottom:calc(var(--tabbar-h) + var(--safe-b) + 90px); }
+main.no-tabbar.with-support { padding-bottom:calc(var(--safe-b) + 90px); }
 @media (min-width: 900px) { main { padding-bottom: 56px; } }
 
 .wrap { padding-inline: var(--gutter); max-width: 1680px; margin-inline: auto; }
