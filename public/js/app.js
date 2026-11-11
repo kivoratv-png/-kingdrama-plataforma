@@ -1,12 +1,12 @@
 // Roteador, estado da sessão e layout.
-import { api, esc, icon, initials, enhance } from './lib.js?v=86226756385f';
-import * as pages from './pages.js?v=86226756385f';
-import * as authPages from './auth-pages.js?v=86226756385f';
-import { dashboard } from './admin.js?v=86226756385f';
-import { clearActivity, sendActivity } from './activity.js?v=86226756385f';
-import { privacy } from './privacy.js?v=86226756385f';
-import { profile } from './profile.js?v=86226756385f';
-import { requests } from './requests.js?v=86226756385f';
+import { api, esc, icon, initials, enhance } from './lib.js?v=8b648d141961';
+import * as pages from './pages.js?v=8b648d141961';
+import * as authPages from './auth-pages.js?v=8b648d141961';
+import { dashboard } from './admin.js?v=8b648d141961';
+import { clearActivity, sendActivity } from './activity.js?v=8b648d141961';
+import { privacy } from './privacy.js?v=8b648d141961';
+import { profile } from './profile.js?v=8b648d141961';
+import { requests } from './requests.js?v=8b648d141961';
 
 export const state = { me: null, site: null };
 const app = document.getElementById('app');
@@ -161,7 +161,7 @@ function shell(html, route) {
       <a href="/categorias" ${cur('categorias')}>Categorias</a>
       <a href="/minha-lista" ${cur('lista')}>Minha lista</a>
       <a href="/perfil" ${cur('perfil')}>Perfil</a>
-      ${u?.isAdmin?'':`<a href="/pedidos" ${cur('pedidos')}>Pedidos</a>`}
+      ${u?.isAdmin?'':`<a href="/pedidos" ${cur('pedidos')}>Pedir doramas</a>`}
     </nav>
     <div class="spacer"></div>
     <form class="top-search" role="search" action="/buscar">
@@ -177,7 +177,7 @@ function shell(html, route) {
         <a role="menuitem" href="/minha-lista">${icon.heart} Minha lista</a>
         <a role="menuitem" href="/historico">${icon.clock} Histórico</a>
         <a role="menuitem" href="/perfil">${icon.user} Perfil e assinatura</a>
-        ${u?.isAdmin?'':`<a role="menuitem" href="/pedidos">${icon.request} Meus pedidos</a>`}
+        ${u?.isAdmin?'':`<a role="menuitem" href="/pedidos">${icon.request} Pedir doramas / Meus pedidos</a>`}
         <a role="menuitem" href="/perfil">${icon.lock} Excluir conta</a>
         <button role="menuitem" type="button" class="danger" data-logout>${icon.logout} Sair</button>
       </div>
@@ -189,7 +189,7 @@ function shell(html, route) {
     <a href="/buscar" ${cur('buscar')}>${icon.search}<span>Buscar</span></a>
     <a href="/categorias" ${cur('categorias')}>${icon.grid}<span>Categorias</span></a>
     <a href="/minha-lista" ${cur('lista')}>${icon.heart}<span>Minha lista</span></a>
-    ${u?.isAdmin?'':`<a href="/pedidos" ${cur('pedidos')}>${icon.request}<span>Pedidos</span></a>`}
+    ${u?.isAdmin?'':`<a href="/pedidos" ${cur('pedidos')}>${icon.request}<span>Pedir doramas</span></a>`}
     <a href="/perfil" ${cur('perfil')}>${icon.user}<span>Perfil</span></a>
   </nav>`;
   enhance(app);

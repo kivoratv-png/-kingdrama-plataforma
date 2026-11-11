@@ -509,6 +509,7 @@ a.chip:hover { color: var(--text); border-color: var(--line-strong); }
 [hidden] { display:none !important; }
 .tabbar.with-requests { grid-template-columns:repeat(6,minmax(0,1fr)); }
 .tabbar.with-requests a { min-width:0; font-size:10px; padding-inline:1px; }
+.tabbar.with-requests a span { max-width:100%; line-height:1.15; text-align:center; }
 .request-page .settings-section { display:grid;gap:16px;min-width:0; }
 .request-page h2,.request-page h3 { margin:0;font-size:18px;overflow-wrap:anywhere; }
 .request-page .hint { line-height:1.6; }
@@ -519,4 +520,4 @@ a.chip:hover { color: var(--text); border-color: var(--line-strong); }
 .auth-card,.auth-card form,.auth-card .field { min-width:0; }
 .auth-card .hint { overflow-wrap:anywhere; }
 .profile-settings .device-row { gap:12px; }
-@media(min-width:900px) and (max-width:1199px) { .topbar { gap:8px; } .topnav { gap:0; } .topnav a { padding:8px; font-size:13px; } .top-search { max-width:150px; min-width:90px; flex-shrink:1; } .topbar .spacer { min-width:0; } .topbar .logo img { height:40px; } }
+@media(min-width:900px) and (max-width:1199px) { .topbar { gap:8px; } .topnav { gap:0; } .topnav a { padding:8px; font-size:13px; } .top-search { max-width:120px; min-width:70px; flex-shrink:1; } .topbar .spacer { min-width:0; } .topbar .logo img { height:40px; } }

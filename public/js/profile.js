@@ -1,4 +1,4 @@
-import { api, esc, icon, initials, toast } from './lib.js?v=86226756385f';
+import { api, esc, icon, initials, toast } from './lib.js?v=8b648d141961';
 
 const date = value => value ? new Date(value).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' }) : 'Não informado';
 const statuses = { active:'Ativa', pending:'Pendente', canceled:'Cancelada', refunded:'Reembolsada', expired:'Expirada', chargeback:'Contestada' };
@@ -35,7 +35,7 @@ export function profile(ctx) {
       <p class="hint">O plano básico permite 1 dispositivo conectado. Ao entrar em outro dispositivo, o acesso anterior é encerrado. Cada navegador com login conta como um dispositivo.</p>
       <div data-devices aria-live="polite">Carregando dispositivos…</div>
     </section>
-    <nav class="list-links" aria-label="Conta"><a href="/politica-de-privacidade">${icon.lock} Política de Privacidade ${icon.chev}</a><button type="button" data-logout>${icon.logout} Sair da conta</button></nav>
+    <nav class="list-links" aria-label="Conta">${user.isAdmin?'':`<a href="/pedidos">${icon.request} Pedir doramas / Meus pedidos ${icon.chev}</a>`}<a href="/politica-de-privacidade">${icon.lock} Política de Privacidade ${icon.chev}</a><button type="button" data-logout>${icon.logout} Sair da conta</button></nav>
     <section class="profile-card settings-section danger-section"><h2>Excluir minha conta</h2><p class="hint">Esta ação é permanente: seu perfil, assinatura registrada, lista e histórico serão removidos. A exclusão não cancela cobranças de um provedor de pagamento; fale com o suporte se houver uma assinatura recorrente.</p>
       <details><summary class="delete-summary">Excluir conta</summary><form class="stack" data-delete-form>
         ${passwordField('deletePassword','Confirme sua senha','current-password')}

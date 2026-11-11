@@ -1,5 +1,5 @@
-import { esc } from './lib.js?v=86226756385f';
-import { mountAdminRequests } from './admin-requests.js?v=86226756385f';
+import { esc } from './lib.js?v=8b648d141961';
+import { mountAdminRequests } from './admin-requests.js?v=8b648d141961';
 
 const client = window.__KD_SB__;
 let status;
@@ -116,6 +116,7 @@ dashboard.mount = (root, ctx) => {
       <section class="adm-stats" aria-label="Visão geral">
         ${[['online','Conectados agora'],['watching','No player'],['users','Contas cadastradas'],['active_subscriptions','Acessos ativos'],['titles','Títulos publicados']].map(([key,label])=>`<div class="adm-stat"><span>${label}</span><strong data-count="${key}">—</strong></div>`).join('')}
       </section>
+      <section class="adm-section"><div class="adm-section-head"><h2>Pedidos de doramas</h2><span>Área exclusiva da administração</span></div><div data-admin-requests></div></section>
       <section class="adm-section"><div class="adm-section-head"><h2>Atividade ao vivo</h2><span>Atualização a cada 15 segundos</span></div>
         <p class="adm-note">Contas com atividade nos últimos 90 segundos. Cada aba aparece em uma linha. “Player aberto” indica a página de reprodução. A posição é exibida quando o player informa esse dado.</p>
         <div class="adm-table-wrap"><table><thead><tr><th>Usuário</th><th>Estado</th><th>Título</th><th>Página acessada</th><th>Posição</th><th>Último sinal</th></tr></thead><tbody data-online></tbody></table></div>
@@ -129,7 +130,6 @@ dashboard.mount = (root, ctx) => {
         <p class="adm-note">Último erro de reprodução comunicado por cada aba. Erros exibidos dentro do iframe da Bunny podem exigir consulta aos logs da Bunny.</p>
         <div class="adm-table-wrap"><table><thead><tr><th>Usuário</th><th>Título</th><th>Erro</th><th>Página</th><th>Horário</th></tr></thead><tbody data-errors></tbody></table></div>
       </section>
-      <section class="adm-section"><div class="adm-section-head"><h2>Pedidos de doramas</h2><span>Área exclusiva da administração</span></div><div data-admin-requests></div></section>
     </div>`;
     mountAdminRequests(content.querySelector('[data-admin-requests]'));
     content.querySelector('[data-refresh]').addEventListener('click', load);
