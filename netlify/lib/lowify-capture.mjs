@@ -1,5 +1,5 @@
 // Discovery captures structure only, without identity, token or payment proof.
-const known=new Set(['g18z8v','P3QfUF','ZPO7Gw','LD4imo','paid','approved','pending','refunded','canceled','cancelled','chargeback','completed','purchase_approved','payment_approved','sale_approved','order.paid','payment.paid']);
+const known=new Set(['g18z8v','P3QfUF','ZPO7Gw','LD4imo','sale.paid','principal','paid','approved','pending','refunded','canceled','cancelled','chargeback','completed','purchase_approved','payment_approved','sale_approved','order.paid','payment.paid']);
 export function payloadShape(value,depth=0,budget={left:1000}) {
   if(--budget.left<0||depth>12)return '<truncated>';
   if(value===null)return null;

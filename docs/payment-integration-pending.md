@@ -2,7 +2,17 @@
 
 Receptor publicado para cadastro na Lowify: `https://appkingdrama.netlify.app/.netlify/functions/lowify-webhook`.
 
-Está em modo de descoberta, sem ativação automática. GET informa esse estado; POST aceita JSON ou formulário, persiste apenas a estrutura anonimizada e nomes de cabeçalhos relacionados à autenticação em uma tabela privada e confirma recebimento com HTTP 200. Não guarda e-mails, telefones, valores ou segredos. Limite de 32 KB por envio e 40 estruturas distintas; estruturas antigas são removidas após sete dias na próxima captura. Nenhum evento recebido nesse modo comprova pagamento e não há reprocessamento automático posterior: os testes/vendas precisam ser reenviados após a integração autenticada ser habilitada.
+## Contrato recebido do proprietário em 11/11/2026
+
+O aviso é JSON com `event: sale.paid`, `status: paid`, `order_id`, `sale_amount`, `timestamp` (exemplo em horário brasileiro sem offset), `product.id` numérico e `customer.email`. A seleção de venda aprovada no painel controla o envio da Lowify, mas não autentica um POST recebido pela plataforma.
+
+A migração `15-lowify-payments.sql` e o receptor implementam o processamento autenticado, sem ativá-lo por padrão: exigem hash de segredo previamente cadastrado no servidor e mapeamento explícito em `lowify_product_plans`. Não foram inventados IDs numéricos nem usado `42` do exemplo. O código do checkout não foi presumido como ID do aviso. O segredo pode ser enviado na URL (`?token=...`) ou por `Authorization: Bearer ...`; a disponibilidade de assinatura oficial da Lowify ainda precisa ser confirmada. Somente o hash SHA-256 de um segredo aleatório de 32 bytes deve ser persistido.
+
+Com autenticação e mapeamento configurados, o receptor grava um registro privado por `order_id`, ativa a conta existente pelo mesmo e-mail e mantém compra anterior ao cadastro pendente. Após o cadastro com o mesmo e-mail, a compra é aplicada. Não cria senhas nem autentica clientes a partir do webhook. Produto desconhecido permanece pendente até ser mapeado, sem conceder plano. Renovações preservam dias existentes; a data inicial corresponde ao pagamento e períodos mensais usam meses do calendário brasileiro. Entregas idênticas não duplicam acesso ou indicações; dados conflitantes no mesmo pedido retornam 409. A rotina `lowify-retry` reconcilia pendências autenticadas a cada cinco minutos.
+
+Pedidos originados na landing page seguem o mesmo processamento, desde que seus IDs de produto sejam mapeados. UTM e dados do afiliado não concedem assinatura nem substituem o vínculo de indicação já gravado no cadastro. Adicionais/order bumps exigem mapeamento próprio; não são tratados automaticamente como assinatura. As notificações de reembolso/chargeback ainda não foram fornecidas/configuradas e não estão conectadas.
+
+Sem segredo, continua em modo de descoberta, sem ativação automática. GET informa esse estado; POST sem segredo aceita JSON ou formulário, persiste apenas a estrutura anonimizada e nomes de cabeçalhos relacionados à autenticação em uma tabela privada e confirma recebimento com HTTP 200. A captura de descoberta não guarda e-mails, telefones, valores ou segredos. Limite de 32 KB por envio e 40 estruturas distintas; estruturas antigas são removidas após sete dias na próxima captura. Nenhum evento recebido nesse modo comprova pagamento e não há reprocessamento automático posterior: os testes/vendas precisam ser reenviados após a integração autenticada ser habilitada.
 
 Próximo passo: cadastrar a URL, enviar o teste da Lowify e confirmar o método oficial de autenticação. Não publicar este modo como liberação de planos concluída.
 
