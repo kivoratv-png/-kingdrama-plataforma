@@ -194,24 +194,32 @@
   // ---------------------------------------------------------------- Catálogo
   const paraCard = (t) => ({ id: t.id, name: t.name, cover: t.cover, episodes: t.episodes_count || 0 });
 
-  // O catálogo inteiro cabe em uma consulta e serve a home, as categorias e os
+  // O catálogo paginado serve a home, as categorias e os
   // "parecidos" da página de título. Filtrar por categoria é trabalho local
   // sobre a lista que já está em mãos — não precisa de outra ida ao banco.
-  function buscaTitulos({ categoria = null, busca = null, limite = 500 } = {}) {
+  function buscaTitulos({ categoria = null, busca = null, limite = null } = {}) {
     // Busca por texto muda a cada letra digitada: essa não entra no cache.
     if (busca) return consultaTitulos({ busca, limite });
     return comCache(`catalogo:titulos:${limite}`, TTL.catalogo, () => consultaTitulos({ limite }))
       .then((lista) => (categoria ? lista.filter((t) => t.categories.includes(categoria)) : lista));
   }
 
-  async function consultaTitulos({ busca = null, limite = 500 } = {}) {
-    let q = sb.from('titles').select('id, name, cover, synopsis, title_categories(category_id)')
-      .eq('published', true).order('name');
-    if (busca) q = q.ilike('name', `%${busca}%`);
-    q = q.limit(limite);
-    const { data, error } = await q;
-    if (error) throw error;
-    return (data || []).map((t) => ({
+  async function consultaTitulos({ busca = null, limite = null } = {}) {
+    const titles = [];
+    for (let offset = 0; ; offset += 1000) {
+      const size = limite ? Math.min(1000, limite - titles.length) : 1000;
+      if (size <= 0) break;
+      // Detail pages fetch their synopsis separately; omit it from catalog lists
+      // so browsing the full catalog stays lightweight on mobile connections.
+      let q = sb.from('titles').select('id, name, cover, title_categories(category_id)')
+        .eq('published', true).order('name').order('id');
+      if (busca) q = q.ilike('name', `%${busca}%`);
+      const { data, error } = await q.range(offset, offset + size - 1);
+      if (error) throw error;
+      titles.push(...(data || []));
+      if (!data?.length || data.length < size || (limite && titles.length >= limite)) break;
+    }
+    return [...new Map(titles.map(t => [t.id, t])).values()].map((t) => ({
       ...t,
       categories: (t.title_categories || []).map((c) => c.category_id),
     }));

@@ -1,14 +1,14 @@
 // Roteador, estado da sessão e layout.
-import { api, esc, icon, initials, enhance } from './lib.js?v=246ead84eab0';
-import * as pages from './pages.js?v=246ead84eab0';
-import * as authPages from './auth-pages.js?v=246ead84eab0';
-import { dashboard } from './admin.js?v=246ead84eab0';
-import { clearActivity, sendActivity } from './activity.js?v=246ead84eab0';
-import { privacy } from './privacy.js?v=246ead84eab0';
-import { profile } from './profile.js?v=246ead84eab0';
-import { requests } from './requests.js?v=246ead84eab0';
-import { offers, offerPath } from './offers.js?v=246ead84eab0';
-import { referrals } from './referrals.js?v=246ead84eab0';
+import { api, esc, icon, initials, enhance } from './lib.js?v=077f2116bb42';
+import * as pages from './pages.js?v=077f2116bb42';
+import * as authPages from './auth-pages.js?v=077f2116bb42';
+import { dashboard } from './admin.js?v=077f2116bb42';
+import { clearActivity, sendActivity } from './activity.js?v=077f2116bb42';
+import { privacy } from './privacy.js?v=077f2116bb42';
+import { profile } from './profile.js?v=077f2116bb42';
+import { requests } from './requests.js?v=077f2116bb42';
+import { offers, offerPath } from './offers.js?v=077f2116bb42';
+import { referrals } from './referrals.js?v=077f2116bb42';
 
 export const state = { me: null, site: null };
 const app = document.getElementById('app');
